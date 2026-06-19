@@ -176,7 +176,7 @@
     view.innerHTML = '<div style="max-width:760px"><h1>Choose your track</h1><p class="sub">Three paths, each built from the real Eterna library. Pick where you are — you can switch anytime.</p><div class="grid" style="grid-template-columns:1fr;gap:14px">' +
       TRACKS.map(function (t) {
         var n = t.modules.reduce(function (a, m) { return a + m.lessons.length; }, 0);
-        return '<div class="card" style="cursor:pointer;display:flex;gap:16px;align-items:flex-start" onclick="eaPick(\'' + t.id + '\')"><div class="ic" style="width:46px;height:46px;font-size:24px;background:rgba(149,199,0,.14);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + '</div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div><div style="font-size:12px;color:var(--txt2)">' + t.modules.length + ' modules · ' + n + ' lessons</div></div><i class="ti ti-arrow-right" style="color:var(--lime);font-size:22px"></i></div>';
+        return '<div class="card" style="cursor:pointer;display:flex;gap:16px;align-items:flex-start" onclick="eaPick(\'' + t.id + '\')"><div class="ic" style="width:46px;height:46px;font-size:24px;background:var(--accent-soft);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + '</div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div><div style="font-size:12px;color:var(--txt2)">' + t.modules.length + ' modules · ' + n + ' lessons</div></div><i class="ti ti-arrow-right" style="color:var(--lime);font-size:22px"></i></div>';
       }).join("") + '</div></div>';
   }
   window.eaPick = function (id) { state.track = id; state.seenTracks[id] = true; save(); go("dashboard"); };
@@ -188,7 +188,7 @@
     var modsDone = t.modules.filter(moduleComplete).length;
     var next = null; for (var i = 0; i < lessons.length && !next; i++) if (!lessonComplete(lessons[i])) next = lessons[i];
     view.innerHTML =
-      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="ic" style="background:rgba(149,199,0,.14);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><h1 style="margin:0">' + escp(t.title) + ' track</h1></div>' +
+      '<div style="display:flex;align-items:center;gap:10px;margin-bottom:2px"><div class="ic" style="background:var(--accent-soft);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><h1 style="margin:0">' + escp(t.title) + ' track</h1></div>' +
       '<p class="sub">' + (li.ceil - li.xp) + ' XP to Level ' + (li.idx + 2) + '. ' + (state.streak || 1) + '-day streak.</p>' +
       '<div class="grid cards4" style="margin-bottom:14px">' +
         sc("Level", (li.idx + 1), li.name) + sc("Total XP", li.xp.toLocaleString(), "of " + li.ceil.toLocaleString()) +
@@ -213,7 +213,7 @@
         var icon = lc ? "ti-circle-check" : (l.type === "video" ? "ti-player-play" : l.type === "quiz" ? "ti-help-circle" : l.type === "roleplay" ? "ti-microphone-2" : l.type === "doc" ? "ti-file-text" : l.type === "library" ? "ti-player-play" : "ti-book");
         return '<div class="les' + (lc ? ' done' : '') + '" onclick="eaGo(\'lesson\',\'' + l.id + '\')"><span class="ticon"><i class="ti ' + icon + '"></i></span><span class="lt">' + escp(lessonTitle(l)) + '</span><span class="typetag">' + l.type + '</span><span class="lx">+' + (l.xp || 0) + '</span></div>';
       }).join("");
-      return '<div class="mod' + ((prog > 0 && !done) ? ' open' : '') + '" id="mod' + i + '"><div class="mod-h" onclick="document.getElementById(\'mod' + i + '\').classList.toggle(\'open\')"><div class="ic" style="background:rgba(255,255,255,.05);color:' + c + '"><i class="ti ' + m.icon + '"></i></div><div style="flex:1"><div style="font-weight:600">' + (i + 1) + '. ' + escp(m.title) + '</div><div style="font-size:12px;color:var(--txt2)">' + escp(m.summary || "") + '</div></div><div style="text-align:right;min-width:70px"><div style="font-size:12px;color:' + c + '">' + (done ? "Done" : prog + "%") + '</div><div class="prog" style="width:60px;margin-top:5px"><i style="width:' + prog + '%"></i></div></div></div><div class="mod-les">' + les + '</div></div>';
+      return '<div class="mod' + ((prog > 0 && !done) ? ' open' : '') + '" id="mod' + i + '"><div class="mod-h" onclick="document.getElementById(\'mod' + i + '\').classList.toggle(\'open\')"><div class="ic" style="background:var(--chip);color:' + c + '"><i class="ti ' + m.icon + '"></i></div><div style="flex:1"><div style="font-weight:600">' + (i + 1) + '. ' + escp(m.title) + '</div><div style="font-size:12px;color:var(--txt2)">' + escp(m.summary || "") + '</div></div><div style="text-align:right;min-width:70px"><div style="font-size:12px;color:' + c + '">' + (done ? "Done" : prog + "%") + '</div><div class="prog" style="width:60px;margin-top:5px"><i style="width:' + prog + '%"></i></div></div></div><div class="mod-les">' + les + '</div></div>';
     }).join("");
   }
 
@@ -329,7 +329,7 @@
   function badges() {
     view.innerHTML = '<h1>Badges</h1><p class="sub">' + Object.keys(state.badges).length + ' of ' + BADGES.length + ' earned.</p><div class="grid" style="grid-template-columns:repeat(4,1fr)">' + BADGES.map(function (b) {
       var on = state.badges[b.id];
-      return '<div class="card" style="text-align:center;' + (on ? '' : 'opacity:.45') + '"><div class="ic" style="margin:0 auto 8px;width:46px;height:46px;font-size:24px;background:rgba(91,155,224,.14);color:' + (on ? 'var(--info)' : 'var(--txt2)') + '"><i class="ti ' + b.i + '"></i></div><div style="font-weight:600;font-size:13.5px">' + escp(b.t) + '</div><div style="font-size:11px;color:var(--txt2)">' + (on ? 'Earned' : 'Locked') + '</div></div>';
+      return '<div class="card" style="text-align:center;' + (on ? '' : 'opacity:.45') + '"><div class="ic" style="margin:0 auto 8px;width:46px;height:46px;font-size:24px;background:var(--info-soft);color:' + (on ? 'var(--info)' : 'var(--txt2)') + '"><i class="ti ' + b.i + '"></i></div><div style="font-weight:600;font-size:13.5px">' + escp(b.t) + '</div><div style="font-size:11px;color:var(--txt2)">' + (on ? 'Earned' : 'Locked') + '</div></div>';
     }).join("") + '</div>';
   }
   function groupBy(arr, key) { var m = {}, o = []; arr.forEach(function (x) { var k = x[key] || "Other"; if (!m[k]) { m[k] = []; o.push(k); } m[k].push(x); }); return o.map(function (k) { return { key: k, items: m[k] }; }); }

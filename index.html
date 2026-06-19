@@ -6,25 +6,27 @@
 <meta name="robots" content="noindex, nofollow">
 <title>Eterna Academy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
 <link rel="stylesheet" href="css/styles.css">
 <style>
-  #gate{position:fixed;inset:0;background:#0e1726;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;z-index:100}
-  #gate .box{background:#16223a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:34px;width:330px;text-align:center}
-  #gate .logo{width:48px;height:48px;border-radius:12px;background:#95c700;color:#142a4a;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
-  #gate h1{font-size:20px;font-weight:600;margin:0 0 4px;color:#eaf0f8}
-  #gate p{color:#9fb2cc;font-size:13px;margin:0 0 20px}
-  #gate input{width:100%;padding:11px 13px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:#1d2c49;color:#eaf0f8;font:inherit;margin-bottom:12px}
-  #gate button{width:100%;padding:11px;border:0;border-radius:9px;background:#95c700;color:#142a4a;font-weight:600;font:inherit;cursor:pointer}
-  #gate .err{color:#f06363;font-size:13px;margin-bottom:10px;display:none}
+  #gate{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;justify-content:center;font-family:'DM Sans',sans-serif;z-index:100}
+  #gate .box{background:var(--green);border-radius:18px;padding:40px 34px;width:340px;text-align:center;box-shadow:0 12px 44px rgba(26,60,52,.22)}
+  #gate .box img{height:34px;width:auto;display:block;margin:0 auto 6px}
+  #gate .acad{color:var(--gold-bright);font-size:12px;letter-spacing:.22em;font-weight:600;margin-bottom:18px}
+  #gate p{color:rgba(255,255,255,.75);font-size:13px;margin:0 0 20px}
+  #gate input{width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.08);color:#fff;font:inherit;margin-bottom:12px}
+  #gate input::placeholder{color:rgba(255,255,255,.5)}
+  #gate button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--gold-bright);color:var(--green);font-weight:600;font:inherit;cursor:pointer}
+  #gate button:hover{filter:brightness(1.05)}
+  #gate .err{color:#ffb4ab;font-size:13px;margin-bottom:10px;display:none}
 </style>
 </head>
 <body>
 <div id="gate">
   <form class="box" id="gateForm">
-    <div class="logo"><i class="ti ti-bolt"></i></div>
-    <h1>Eterna Academy</h1>
+    <img src="assets/eterna-logo-white.png" alt="Eterna">
+    <div class="acad">ACADEMY</div>
     <p>Enter your access password</p>
     <div class="err" id="gateErr">Incorrect password</div>
     <input type="password" id="gatePw" placeholder="Password" autocomplete="current-password" autofocus>
@@ -34,7 +36,7 @@
 
 <div class="app" id="app" style="display:none">
   <aside class="side">
-    <div class="brand"><div class="logo"><i class="ti ti-bolt"></i></div><b>Eterna Academy</b></div>
+    <div class="brand"><img src="assets/eterna-logo-white.png" alt="Eterna"><span style="color:var(--gold-bright);font-size:10px;letter-spacing:.18em;font-weight:600;align-self:flex-end;padding-bottom:3px">ACADEMY</span></div>
     <button class="nav" data-go="dashboard"><i class="ti ti-home"></i> <span>Dashboard</span></button>
     <button class="nav" data-go="curriculum"><i class="ti ti-map-2"></i> <span>Curriculum</span></button>
     <button class="nav" data-go="arena"><i class="ti ti-microphone-2"></i> <span>Roleplay arena</span></button>
