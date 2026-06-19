@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Eterna Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<link rel="stylesheet" href="css/styles.css">
+<style>
+  #gate{position:fixed;inset:0;background:#0e1726;display:flex;align-items:center;justify-content:center;font-family:'Poppins',sans-serif;z-index:100}
+  #gate .box{background:#16223a;border:1px solid rgba(255,255,255,.1);border-radius:16px;padding:34px;width:330px;text-align:center}
+  #gate .logo{width:48px;height:48px;border-radius:12px;background:#95c700;color:#142a4a;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 14px}
+  #gate h1{font-size:20px;font-weight:600;margin:0 0 4px;color:#eaf0f8}
+  #gate p{color:#9fb2cc;font-size:13px;margin:0 0 20px}
+  #gate input{width:100%;padding:11px 13px;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:#1d2c49;color:#eaf0f8;font:inherit;margin-bottom:12px}
+  #gate button{width:100%;padding:11px;border:0;border-radius:9px;background:#95c700;color:#142a4a;font-weight:600;font:inherit;cursor:pointer}
+  #gate .err{color:#f06363;font-size:13px;margin-bottom:10px;display:none}
+</style>
+</head>
+<body>
+<div id="gate">
+  <form class="box" id="gateForm">
+    <div class="logo"><i class="ti ti-bolt"></i></div>
+    <h1>Eterna Academy</h1>
+    <p>Enter your access password</p>
+    <div class="err" id="gateErr">Incorrect password</div>
+    <input type="password" id="gatePw" placeholder="Password" autocomplete="current-password" autofocus>
+    <button type="submit" id="gateBtn">Unlock</button>
+  </form>
+</div>
+
+<div class="app" id="app" style="display:none">
+  <aside class="side">
+    <div class="brand"><div class="logo"><i class="ti ti-bolt"></i></div><b>Eterna Academy</b></div>
+    <button class="nav" data-go="dashboard"><i class="ti ti-home"></i> <span>Dashboard</span></button>
+    <button class="nav" data-go="curriculum"><i class="ti ti-map-2"></i> <span>Curriculum</span></button>
+    <button class="nav" data-go="arena"><i class="ti ti-microphone-2"></i> <span>Roleplay arena</span></button>
+    <button class="nav" data-go="quiz"><i class="ti ti-help-circle"></i> <span>Quiz bank</span></button>
+    <button class="nav" data-go="leaderboard"><i class="ti ti-trophy"></i> <span>Leaderboard</span></button>
+    <button class="nav" data-go="badges"><i class="ti ti-award"></i> <span>Badges</span></button>
+    <div class="spacer"></div>
+    <button class="nav" data-go="reset"><i class="ti ti-refresh"></i> <span>Reset progress</span></button>
+    <div class="foot" id="foot"></div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <div style="color:var(--txt2);font-size:13px"><i class="ti ti-flame" style="color:var(--warn);vertical-align:-2px"></i> <span id="streak">1</span>-day streak</div>
+      <div class="chips">
+        <span class="chip"><i class="ti ti-coin" style="color:var(--warn)"></i> <span id="coins">0</span></span>
+        <span class="lvl" id="levelpill">Level 1</span>
+        <div class="xpmini"><i id="xpbar" style="width:0%"></i></div>
+        <div class="av" id="avatar">A</div>
+      </div>
+    </div>
+    <div class="wrap" id="view"></div>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="js/data.enc.js"></script>
+<script src="js/gate.js"></script>
+</body>
+</html>
