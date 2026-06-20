@@ -48,6 +48,14 @@
   async function loadDoc(id) {
     if (docCache[id]) return docCache[id];
     var pw = sessionStorage.getItem("ea_pw");
+    // backend first (reflects manager edits)
+    try {
+      if (window.EA_API) {
+        var r = await fetch(window.EA_API + "/body?id=" + encodeURIComponent(id) + "&pw=" + encodeURIComponent(pw));
+        if (r.ok) { var t = await r.text(); if (t) { docCache[id] = t; return t; } }
+      }
+    } catch (e) {}
+    // fallback: encrypted static file
     var res = await fetch("docs/" + id + ".enc");
     if (!res.ok) throw new Error("not found");
     var txt = await decryptBytes(await res.text(), pw);
