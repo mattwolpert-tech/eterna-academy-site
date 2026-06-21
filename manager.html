@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Eterna Academy — Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/dist/tabler-icons.min.css">
+<style>
+  :root{--green:#1a3c34;--green2:#2d6a56;--gold:#b88a1e;--goldb:#f5c842;--bg:#f6f3ec;--panel:#fff;--line:rgba(26,60,52,.14);--txt:#1b2a25;--txt2:#5a6672;--bad:#c0392b}
+  *{box-sizing:border-box}body{margin:0;font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--txt);font-size:15px}
+  h1,h2,h3{font-family:'Playfair Display',serif;color:var(--green);margin:0 0 6px}
+  a{color:var(--green2)}
+  .top{background:var(--green);color:#fff;padding:12px 22px;display:flex;align-items:center;justify-content:space-between}
+  .top img{height:26px}.top .who{font-size:13px;color:rgba(255,255,255,.75)}
+  .tabs{display:flex;gap:4px;padding:10px 22px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{padding:9px 15px;border:none;background:none;font:inherit;color:var(--txt2);cursor:pointer;border-radius:8px 8px 0 0}
+  .tab.on{background:var(--panel);color:var(--green);font-weight:600;border:1px solid var(--line);border-bottom:1px solid var(--panel);margin-bottom:-1px}
+  .wrap{max-width:1050px;margin:0 auto;padding:22px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px;margin-bottom:14px}
+  .btn{background:var(--green);color:#fff;border:none;border-radius:8px;padding:8px 14px;font:inherit;font-weight:500;cursor:pointer}
+  .btn:hover{background:#143029}.btn.s{padding:4px 9px;font-size:13px}.btn.gold{background:var(--goldb);color:var(--green)}
+  .btn.ghost{background:none;border:1px solid var(--line);color:var(--green)}.btn.danger{background:none;border:1px solid var(--bad);color:var(--bad)}
+  input,select,textarea{font:inherit;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--txt);width:100%}
+  textarea{min-height:120px;line-height:1.5;font-family:inherit}
+  label{font-size:12px;color:var(--txt2);display:block;margin:8px 0 3px}
+  table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line)}th{color:var(--txt2);font-weight:600}
+  .row{display:flex;gap:10px;align-items:center}
+  .mod{border:1px solid var(--line);border-radius:10px;margin-bottom:10px}
+  .modh{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#f0f4f1;border-radius:10px 10px 0 0}
+  .les{display:flex;align-items:center;gap:8px;padding:8px 12px;border-top:1px solid var(--line)}
+  .les .lt{flex:1}.pill{font-size:11px;background:#eaf2ed;color:var(--green2);padding:2px 7px;border-radius:5px}
+  .muted{color:var(--txt2);font-size:13px}
+  .ok{color:var(--green2)}.err{color:var(--bad)}
+  #login{max-width:340px;margin:12vh auto;text-align:center}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:9px;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+  .screen{display:none}.screen.on{display:block}
+</style>
+</head>
+<body>
+<div id="login" class="card">
+  <h2>Manager sign-in</h2>
+  <p class="muted">Enter your manager admin key.</p>
+  <input type="password" id="akey" placeholder="AcadAdmin-..." autofocus style="margin-bottom:10px">
+  <button class="btn" style="width:100%" onclick="login()">Sign in</button>
+  <p id="loginerr" class="err" style="display:none;margin-top:8px">Invalid key</p>
+</div>
+
+<div id="appwrap" style="display:none">
+  <div class="top">
+    <div class="row"><img src="assets/eterna-logo-white.png" alt="Eterna"><span style="color:var(--goldb);font-size:11px;letter-spacing:.16em;font-weight:600">MANAGER</span></div>
+    <div class="row"><span class="who" id="who"></span><button class="btn ghost s" style="color:#fff;border-color:rgba(255,255,255,.3)" onclick="logout()">Sign out</button></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on" data-t="agents" onclick="tab('agents')">Agents</button>
+    <button class="tab" data-t="curriculum" onclick="tab('curriculum')">Curriculum</button>
+    <button class="tab" data-t="videos" onclick="tab('videos')">Videos</button>
+    <button class="tab" data-t="quizzes" onclick="tab('quizzes')">Quizzes</button>
+    <button class="tab" data-t="roleplay" onclick="tab('roleplay')">Roleplay</button>
+  </div>
+  <div class="wrap">
+    <div class="screen on" id="s-agents"></div>
+    <div class="screen" id="s-curriculum"></div>
+    <div class="screen" id="s-videos"></div>
+    <div class="screen" id="s-quizzes"></div>
+    <div class="screen" id="s-roleplay"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+var API = "https://eterna-academy-progress.matt-wolpert.workers.dev";
+var KEY = sessionStorage.getItem("ea_admin") || "";
+var DATA = null;
+
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(function(){t.classList.remove("show")},1800);}
+function esc(s){return (s==null?"":String(s)).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");}
+
+async function api(path, opts){ opts=opts||{}; opts.headers=Object.assign({"X-Admin-Key":KEY},opts.headers||{}); return fetch(API+path,opts); }
+
+async function login(){
+  KEY=document.getElementById("akey").value.trim();
+  var r=await api("/admin");
+  if(!r.ok){document.getElementById("loginerr").style.display="block";return;}
+  sessionStorage.setItem("ea_admin",KEY);
+  start();
+}
+function logout(){sessionStorage.removeItem("ea_admin");location.reload();}
+if(KEY){ api("/admin").then(function(r){ if(r.ok) start(); }); }
+
+async function start(){
+  document.getElementById("login").style.display="none";
+  document.getElementById("appwrap").style.display="block";
+  document.getElementById("who").textContent="Signed in";
+  var r=await fetch(API+"/content?key="+encodeURIComponent(KEY));
+  DATA=await r.json();
+  renderAgents(); renderCurriculum(); renderVideos(); renderRaw("quizzes",{questions:DATA.quizzes}); renderRaw("roleplay",{scenarios:DATA.roleplay});
+}
+function tab(t){document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});document.querySelectorAll(".screen").forEach(function(s){s.classList.toggle("on",s.id==="s-"+t)});}
+
+// ---------- AGENTS ----------
+async function renderAgents(){
+  var el=document.getElementById("s-agents");
+  el.innerHTML='<h2>Agent progress</h2><p class="muted">Live completion across the floor.</p><div class="card" id="agtbl">Loading…</div>';
+  var r=await api("/admin"); var d=await r.json();
+  var a=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp});
+  if(!a.length){document.getElementById("agtbl").innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
+  var rows=a.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+'</div></td><td><span class="pill">'+esc(x.track||"-")+'</span></td><td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.lessons||0)+'</td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td></tr>';}).join("");
+  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Track</th><th>Level</th><th>XP</th><th>Lessons</th><th>Badges</th><th>Certs</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ---------- CURRICULUM ----------
+function renderCurriculum(){
+  var el=document.getElementById("s-curriculum");
+  var h='<div class="row" style="justify-content:space-between"><h2>Curriculum</h2><button class="btn" onclick="saveStructure()">Save & publish</button></div><p class="muted">Edit titles, add/remove/reorder modules &amp; lessons. Changes go live for agents on their next load.</p>';
+  DATA.tracks.forEach(function(t,ti){
+    h+='<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">'+esc(t.title)+' <span class="muted">('+t.id+')</span></h3></div>';
+    t.modules.forEach(function(m,mi){
+      h+='<div class="mod"><div class="modh"><i class="ti '+esc(m.icon||"ti-folder")+'"></i><input value="'+esc(m.title)+'" onchange="setMod('+ti+','+mi+',\'title\',this.value)" style="flex:1;font-weight:600"><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',-1)">↑</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',1)">↓</button><button class="btn danger s" onclick="delMod('+ti+','+mi+')">Delete</button></div>';
+      m.lessons.forEach(function(l,li){
+        h+='<div class="les"><span class="pill">'+esc(l.type)+'</span><input class="lt" value="'+esc(l.title||(l.doc?(DATA.docs[l.doc]&&DATA.docs[l.doc].t)||l.doc:l.id))+'" onchange="setLes('+ti+','+mi+','+li+',\'title\',this.value)"><input style="width:64px" type="number" value="'+(l.xp||0)+'" title="XP" onchange="setLes('+ti+','+mi+','+li+',\'xp\',+this.value)"><button class="btn ghost s" onclick="editLesson('+ti+','+mi+','+li+')">Edit</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',-1)">↑</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',1)">↓</button><button class="btn danger s" onclick="delLes('+ti+','+mi+','+li+')">✕</button></div>';
+      });
+      h+='<div class="les"><button class="btn ghost s" onclick="addLes('+ti+','+mi+')">+ Add lesson</button></div></div>';
+    });
+    h+='<button class="btn ghost s" onclick="addMod('+ti+')">+ Add module</button></div>';
+  });
+  h+='<div id="lessonEdit"></div>';
+  el.innerHTML=h;
+}
+function setMod(ti,mi,k,v){DATA.tracks[ti].modules[mi][k]=v;}
+function setLes(ti,mi,li,k,v){DATA.tracks[ti].modules[mi].lessons[li][k]=v;}
+function moveMod(ti,mi,d){var a=DATA.tracks[ti].modules;var ni=mi+d;if(ni<0||ni>=a.length)return;var x=a.splice(mi,1)[0];a.splice(ni,0,x);renderCurriculum();}
+function moveLes(ti,mi,li,d){var a=DATA.tracks[ti].modules[mi].lessons;var ni=li+d;if(ni<0||ni>=a.length)return;var x=a.splice(li,1)[0];a.splice(ni,0,x);renderCurriculum();}
+function delMod(ti,mi){if(confirm("Delete this module?")){DATA.tracks[ti].modules.splice(mi,1);renderCurriculum();}}
+function delLes(ti,mi,li){if(confirm("Delete this lesson?")){DATA.tracks[ti].modules[mi].lessons.splice(li,1);renderCurriculum();}}
+function addMod(ti){var id="m"+Date.now();DATA.tracks[ti].modules.push({id:id,title:"New module",icon:"ti-folder",summary:"",lessons:[]});renderCurriculum();}
+function addLes(ti,mi){var id="l"+Date.now();DATA.tracks[ti].modules[mi].lessons.push({id:id,type:"reading",title:"New lesson",xp:30,body:""});renderCurriculum();}
+
+async function editLesson(ti,mi,li){
+  var l=DATA.tracks[ti].modules[mi].lessons[li];
+  var box=document.getElementById("lessonEdit");
+  var body="";
+  if(l.type==="doc"&&l.doc){ var r=await fetch(API+"/body?id="+encodeURIComponent(l.doc)+"&key="+encodeURIComponent(KEY)); body=await r.text(); }
+  else body=l.body||"";
+  box.innerHTML='<div class="card" style="border:2px solid var(--green2)"><h3>Edit lesson</h3>'
+    +'<label>Title</label><input id="le_title" value="'+esc(l.title||"")+'">'
+    +'<label>Type</label><select id="le_type"><option value="reading">reading</option><option value="doc">doc (document)</option><option value="video">video</option><option value="quiz">quiz</option><option value="roleplay">roleplay</option><option value="library">video library</option></select>'
+    +'<label>XP</label><input id="le_xp" type="number" value="'+(l.xp||0)+'">'
+    +'<div id="le_typdefs"></div>'
+    +'<label>Body (markdown — for reading/doc/video intro)</label><textarea id="le_body">'+esc(body)+'</textarea>'
+    +'<div class="row" style="margin-top:10px"><button class="btn" onclick="saveLesson('+ti+','+mi+','+li+')">Save lesson</button><button class="btn ghost" onclick="document.getElementById(\'lessonEdit\').innerHTML=\'\'">Close</button></div></div>';
+  document.getElementById("le_type").value=l.type;
+  leTypeDefs(l);
+  document.getElementById("le_type").onchange=function(){leTypeDefs(l)};
+  box.scrollIntoView({behavior:"smooth"});
+}
+function leTypeDefs(l){
+  var t=document.getElementById("le_type").value;var d=document.getElementById("le_typdefs");var h="";
+  if(t==="video")h='<label>Video (Google Drive file id OR youtube id)</label><input id="le_video" value="'+esc(l.video||"")+'">';
+  if(t==="doc")h='<label>Document id (e.g. d077) — body below loads/saves this doc</label><input id="le_doc" value="'+esc(l.doc||"")+'">';
+  if(t==="quiz")h='<label>Quiz ids (comma-separated, from Quizzes tab)</label><input id="le_quizzes" value="'+esc((l.quizzes||[]).join(","))+'">';
+  if(t==="roleplay")h='<label>Roleplay ids (comma-separated)</label><input id="le_roleplay" value="'+esc((l.roleplay||[]).join(","))+'">';
+  d.innerHTML=h;
+}
+async function saveLesson(ti,mi,li){
+  var l=DATA.tracks[ti].modules[mi].lessons[li];
+  l.title=document.getElementById("le_title").value;
+  l.type=document.getElementById("le_type").value;
+  l.xp=+document.getElementById("le_xp").value||0;
+  var body=document.getElementById("le_body").value;
+  ["video","doc","quizzes","roleplay","body"].forEach(function(k){delete l[k];});
+  if(l.type==="video")l.video=document.getElementById("le_video").value.trim();
+  if(l.type==="doc"){l.doc=document.getElementById("le_doc").value.trim();}
+  if(l.type==="quiz")l.quizzes=document.getElementById("le_quizzes").value.split(",").map(function(s){return s.trim()}).filter(Boolean);
+  if(l.type==="roleplay")l.roleplay=document.getElementById("le_roleplay").value.split(",").map(function(s){return s.trim()}).filter(Boolean);
+  if(l.type==="doc"&&l.doc){ await api("/savebody",{method:"POST",body:JSON.stringify({id:l.doc,text:body})}); }
+  else if(body) l.body=body;
+  await saveStructure(true);
+  document.getElementById("lessonEdit").innerHTML="";
+  renderCurriculum(); toast("Lesson saved");
+}
+async function saveStructure(quiet){
+  var r=await api("/save",{method:"POST",body:JSON.stringify({what:"structure",value:{levels:DATA.levels,tracks:DATA.tracks}})});
+  if(r.ok){ if(!quiet)toast("Curriculum published"); } else toast("Save failed");
+}
+
+// ---------- VIDEOS ----------
+function renderVideos(){
+  var el=document.getElementById("s-videos");
+  var h='<div class="row" style="justify-content:space-between"><h2>Videos</h2><button class="btn" onclick="saveVideos()">Save & publish</button></div><p class="muted">Paste a Google Drive file id or YouTube id. Assign a track; it shows in that track\'s video library.</p>';
+  h+='<div class="card"><table><thead><tr><th>Title</th><th>Drive/YouTube id</th><th>Track</th><th></th></tr></thead><tbody id="vbody"></tbody></table><button class="btn ghost s" style="margin-top:10px" onclick="addVid()">+ Add video</button></div>';
+  el.innerHTML=h; vrows();
+}
+function vrows(){
+  document.getElementById("vbody").innerHTML=DATA.videos.map(function(v,i){
+    return '<tr><td><input value="'+esc(v.t)+'" onchange="DATA.videos['+i+'].t=this.value"></td><td><input value="'+esc(v.id)+'" onchange="DATA.videos['+i+'].id=this.value"></td><td><select onchange="DATA.videos['+i+'].track=this.value"><option '+(v.track==="new"?"selected":"")+'>new</option><option value="existing" '+(v.track==="existing"?"selected":"")+'>existing</option><option value="leader" '+(v.track==="leader"?"selected":"")+'>leader</option></select></td><td><button class="btn danger s" onclick="DATA.videos.splice('+i+',1);vrows()">✕</button></td></tr>';
+  }).join("");
+}
+function addVid(){DATA.videos.push({t:"New video",id:"",track:"new"});vrows();}
+async function saveVideos(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"videos",value:DATA.videos})});toast(r.ok?"Videos published":"Save failed");}
+
+// ---------- RAW (quizzes / roleplay) ----------
+function renderRaw(what,obj){
+  var el=document.getElementById("s-"+what);
+  el.innerHTML='<div class="row" style="justify-content:space-between"><h2>'+(what==="quizzes"?"Quiz bank":"Roleplay scenarios")+'</h2><button class="btn" onclick="saveRaw(\''+what+'\')">Save & publish</button></div>'
+    +'<p class="muted">Structured JSON editor (full control). '+(what==="quizzes"?"Each: {id, topic, q, options:[], answer:index, xp, explain}":"Each: {id, category, client, options:[{text,score,feedback}]}")+'</p>'
+    +'<div class="card"><textarea id="raw_'+what+'" style="min-height:420px;font-family:ui-monospace,monospace;font-size:13px">'+esc(JSON.stringify(obj,null,2))+'</textarea><p id="raw_'+what+'_err" class="err" style="display:none"></p></div>';
+}
+async function saveRaw(what){
+  var ta=document.getElementById("raw_"+what);var errp=document.getElementById("raw_"+what+"_err");
+  var val; try{val=JSON.parse(ta.value);}catch(e){errp.style.display="block";errp.textContent="Invalid JSON: "+e.message;return;}
+  errp.style.display="none";
+  var r=await api("/save",{method:"POST",body:JSON.stringify({what:what,value:val})});
+  if(r.ok){ if(what==="quizzes")DATA.quizzes=val.questions||[]; else DATA.roleplay=val.scenarios||[]; toast(what+" published"); } else toast("Save failed");
+}
+</script>
+</body>
+</html>
