@@ -20,9 +20,37 @@
   var state = load();
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s) return s; } catch (e) {}
-    return { track: null, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, streak: 1, lastActive: today() };
+    return { track: null, identity: null, orientation: {}, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, streak: 1, lastActive: today() };
   }
-  function save() { localStorage.setItem(KEY, JSON.stringify(state)); }
+  function save() { localStorage.setItem(KEY, JSON.stringify(state)); scheduleSync(); }
+  var syncT;
+  function emailKey() { return state.identity && state.identity.email; }
+  function scheduleSync() { if (!emailKey()) return; clearTimeout(syncT); syncT = setTimeout(syncUp, 1200); }
+  function syncUp() {
+    if (!emailKey() || !window.EA_API) return;
+    var li = levelInfo();
+    var payload = {
+      pw: sessionStorage.getItem("ea_pw"), email: state.identity.email, name: state.identity.name,
+      track: state.track, xp: li.xp, level: li.idx, lessons: Object.keys(state.completed).length,
+      badges: Object.keys(state.badges).length,
+      certs: TRACKS.filter(trackComplete).map(function (t) { return t.id; }),
+      orientation: state.orientation || {},
+      data: { completed: state.completed, quiz: state.quiz, rp: state.rp, badges: state.badges, orientation: state.orientation }
+    };
+    fetch(window.EA_API + "/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function () {});
+  }
+  async function syncDown() {
+    if (!emailKey() || !window.EA_API) return;
+    try {
+      var r = await fetch(window.EA_API + "/me?email=" + encodeURIComponent(state.identity.email));
+      var d = await r.json();
+      if (d && d.data) {
+        ["completed", "quiz", "rp", "badges"].forEach(function (k) { if (d.data[k]) Object.keys(d.data[k]).forEach(function (id) { if (state[k][id] === undefined) state[k][id] = d.data[k][id]; }); });
+        if (d.data.orientation && Object.keys(d.data.orientation).length) state.orientation = Object.assign(state.orientation || {}, d.data.orientation);
+        localStorage.setItem(KEY, JSON.stringify(state));
+      }
+    } catch (e) {}
+  }
   function today() { return new Date().toISOString().slice(0, 10); }
   (function () {
     var t = today();
@@ -140,7 +168,7 @@
     document.getElementById("xpbar").style.width = Math.max(0, Math.min(100, li.pct)) + "%";
     document.getElementById("coins").textContent = li.xp.toLocaleString();
     document.getElementById("streak").textContent = state.streak || 1;
-    document.getElementById("avatar").textContent = (curTrack() ? curTrack().title[0] : "A");
+    document.getElementById("avatar").textContent = (state.identity && state.identity.name ? state.identity.name.replace(/[^A-Za-z ]/g, "").split(" ").map(function (x) { return x[0]; }).join("").slice(0, 2).toUpperCase() : "A");
     var foot = document.getElementById("foot");
     if (foot) foot.textContent = Object.keys(state.completed).length + " lessons · " + Object.keys(state.badges).length + " badges";
   }
@@ -166,8 +194,85 @@
     });
   });
 
+  function identityScreen() {
+    var inp = 'width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--panel2);color:var(--txt);font:inherit;margin-bottom:12px';
+    view.innerHTML = '<div style="max-width:440px"><h1>Welcome to Eterna Academy</h1>'
+      + '<p class="sub">Tell us who you are so your progress saves across devices and your certifications reach your manager.</p>'
+      + '<div class="card"><label style="display:block;font-size:13px;color:var(--txt2);margin-bottom:4px">Full name</label>'
+      + '<input id="id_name" style="' + inp + '">'
+      + '<label style="display:block;font-size:13px;color:var(--txt2);margin-bottom:4px">Work email</label>'
+      + '<input id="id_email" type="email" style="' + inp + 'margin-bottom:14px">'
+      + '<button class="btn" onclick="eaIdentity()">Continue</button>'
+      + '<div id="id_err" class="fb bad" style="display:none;margin-top:10px"></div></div></div>';
+  }
+  window.eaIdentity = function () {
+    var n = (document.getElementById("id_name").value || "").trim();
+    var e = (document.getElementById("id_email").value || "").trim().toLowerCase();
+    if (!n || e.indexOf("@") < 1) { var er = document.getElementById("id_err"); er.style.display = "block"; er.textContent = "Enter your name and a valid work email."; return; }
+    state.identity = { name: n, email: e }; save();
+    syncDown().then(function () { render(); });
+  };
+
+  function uploadItems(l) { var a = []; (l.carriers || []).forEach(function (c) { a.push({ name: c, kind: "carrier" }); }); (l.proof || []).forEach(function (x) { a.push({ name: x, kind: "proof" }); }); return a; }
+  function orientStatus(name) { return (state.orientation.items && state.orientation.items[name]) || null; }
+  function lesson_upload(l) {
+    var items = uploadItems(l);
+    var done = items.every(function (it) { var s = orientStatus(it.name); return s && (s.status === "uploaded" || s.status === "dont_have"); });
+    if (done && !state.completed[l.id]) completeLesson(l);
+    var rows = items.map(function (it) {
+      var s = orientStatus(it.name);
+      var badge = s ? (s.status === "uploaded" ? '<span class="badge b-good"><i class="ti ti-check" style="vertical-align:-2px"></i> Uploaded</span>' : '<span class="badge" style="background:rgba(192,57,43,.12);color:var(--bad)">Don\'t have</span>') : '<span class="badge" style="background:var(--panel2);color:var(--txt2)">Pending</span>';
+      var slug = it.kind + "_" + it.name.replace(/[^a-zA-Z0-9]/g, "");
+      return '<div class="card" style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="flex:1"><b style="font-weight:600">' + escp(it.name) + '</b> ' + badge + '</div>'
+        + '<label class="btn ghost" style="cursor:pointer;margin:0">Upload<input type="file" accept="image/*" style="display:none" onchange="eaUpload(\'' + l.id + '\',\'' + escp(it.name) + '\',\'' + slug + '\',this)"></label>'
+        + '<button class="btn ghost" onclick="eaDontHave(\'' + l.id + '\',\'' + escp(it.name) + '\')">Don\'t have</button></div>';
+    }).join("");
+    document.getElementById("lextra").innerHTML = '<div style="margin-top:8px">' + rows + '</div>' + (done ? '<div class="fb good" style="display:block;margin-top:6px"><b>All set.</b> ' + nextBtn(l) + '</div>' : '');
+  }
+  window.eaUpload = function (lid, name, slug, input) {
+    var f = input.files && input.files[0]; if (!f) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      fetch(window.EA_API + "/upload", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ pw: sessionStorage.getItem("ea_pw"), email: state.identity.email, slug: slug, dataURL: reader.result }) }).catch(function () {});
+      state.orientation.items = state.orientation.items || {}; state.orientation.items[name] = { status: "uploaded", slug: slug };
+      save(); toast("Uploaded · " + name); lesson_upload(lessonById[lid]); checkBadges(); header();
+    };
+    reader.readAsDataURL(f);
+  };
+  window.eaDontHave = function (lid, name) {
+    state.orientation.items = state.orientation.items || {}; state.orientation.items[name] = { status: "dont_have" };
+    save(); toast("Flagged for your manager · " + name); lesson_upload(lessonById[lid]); checkBadges(); header();
+  };
+
+  function lesson_exam(l) {
+    var qs = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean);
+    var pass = l.pass || 80;
+    document.getElementById("lextra").innerHTML = '<div class="card"><div style="font-weight:600;margin-bottom:2px">Exam · ' + qs.length + ' questions · pass ' + pass + '%</div><div class="sub" style="margin:0 0 12px">Answer all, then submit.</div><div id="examqs"></div><button class="btn" id="examsubmit" onclick="eaExamSubmit(\'' + l.id + '\')">Submit exam</button><div id="examres"></div></div>';
+    document.getElementById("examqs").innerHTML = qs.map(function (q, i) {
+      return '<div class="card" data-eq="' + q.id + '" style="margin-bottom:10px"><div style="font-weight:500;margin-bottom:8px">' + (i + 1) + '. ' + escp(q.q) + '</div>' + q.options.map(function (o, j) { return '<button class="opt" onclick="eaExamPick(\'' + q.id + '\',' + j + ',this)">' + escp(o) + '</button>'; }).join("") + '</div>';
+    }).join("");
+    window._exam = { ans: {} };
+  }
+  window.eaExamPick = function (qid, j, btn) { window._exam.ans[qid] = j; var card = btn.closest("[data-eq]"); card.querySelectorAll(".opt").forEach(function (b) { b.style.borderColor = ""; }); btn.style.borderColor = "var(--green2)"; };
+  window.eaExamSubmit = function (lid) {
+    var l = lessonById[lid], qs = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean), pass = l.pass || 80;
+    var correct = 0; qs.forEach(function (q) { if (window._exam.ans[q.id] === q.answer) correct++; });
+    var score = Math.round(correct / qs.length * 100), passed = score >= pass;
+    state.orientation.exam = { score: score, passed: passed };
+    var res = document.getElementById("examres");
+    if (passed) {
+      if (!state.completed[l.id]) completeLesson(l); save(); checkBadges(); header();
+      res.innerHTML = '<div class="fb good" style="display:block;margin-top:12px"><b>Passed — ' + score + '%!</b><br>You\'re certified. <b>Orientation with Jessica is unlocked</b> and you\'re cleared to start taking live inbound calls. Your manager has been notified.</div>';
+      document.getElementById("examsubmit").disabled = true;
+    } else {
+      save();
+      res.innerHTML = '<div class="fb bad" style="display:block;margin-top:12px"><b>Scored ' + score + '% — need ' + pass + '%.</b> Review the orientation and try again.<br><button class="btn ghost" style="margin-top:8px" onclick="eaGo(\'lesson\',\'' + l.id + '\')">Retake exam</button></div>';
+    }
+  };
+
   function render() {
     header(); setNav();
+    if (!state.identity) return identityScreen();
     if (!curTrack()) return rolePicker();
     var r = route.name;
     if (r === "curriculum") return curriculum();
@@ -236,6 +341,8 @@
     h += '<div id="lextra"></div>';
     view.innerHTML = h;
     if (l.type === "doc") loadDoc(l.doc).then(function (txt) { document.getElementById("docbody").innerHTML = renderDocText(txt); }).catch(function () { document.getElementById("docbody").innerHTML = '<p class="fb bad" style="display:block">Could not load this document. Try re-entering your password.</p>'; });
+    if (l.type === "exam") { lesson_exam(l); return; }
+    if (l.type === "upload") { lesson_upload(l); return; }
     if (l.type === "roleplay") { renderRoleplay(l); return; }
     var quizzes = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean);
     if (quizzes.length) { renderQuizSet(l, quizzes); return; }

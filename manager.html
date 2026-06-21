@@ -55,6 +55,7 @@
   </div>
   <div class="tabs">
     <button class="tab on" data-t="agents" onclick="tab('agents')">Agents</button>
+    <button class="tab" data-t="orientation" onclick="tab('orientation')">Orientation</button>
     <button class="tab" data-t="curriculum" onclick="tab('curriculum')">Curriculum</button>
     <button class="tab" data-t="videos" onclick="tab('videos')">Videos</button>
     <button class="tab" data-t="quizzes" onclick="tab('quizzes')">Quizzes</button>
@@ -62,6 +63,7 @@
   </div>
   <div class="wrap">
     <div class="screen on" id="s-agents"></div>
+    <div class="screen" id="s-orientation"></div>
     <div class="screen" id="s-curriculum"></div>
     <div class="screen" id="s-videos"></div>
     <div class="screen" id="s-quizzes"></div>
@@ -96,7 +98,7 @@ async function start(){
   document.getElementById("who").textContent="Signed in";
   var r=await fetch(API+"/content?key="+encodeURIComponent(KEY));
   DATA=await r.json();
-  renderAgents(); renderCurriculum(); renderVideos(); renderRaw("quizzes",{questions:DATA.quizzes}); renderRaw("roleplay",{scenarios:DATA.roleplay});
+  renderAgents(); renderOrientation(); renderCurriculum(); renderVideos(); renderRaw("quizzes",{questions:DATA.quizzes}); renderRaw("roleplay",{scenarios:DATA.roleplay});
 }
 function tab(t){document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});document.querySelectorAll(".screen").forEach(function(s){s.classList.toggle("on",s.id==="s-"+t)});}
 
@@ -109,6 +111,28 @@ async function renderAgents(){
   if(!a.length){document.getElementById("agtbl").innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
   var rows=a.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+'</div></td><td><span class="pill">'+esc(x.track||"-")+'</span></td><td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.lessons||0)+'</td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td></tr>';}).join("");
   document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Track</th><th>Level</th><th>XP</th><th>Lessons</th><th>Badges</th><th>Certs</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table>';
+}
+
+// ---------- ORIENTATION ----------
+var CARRIERS=["Mutual of Omaha","Foresters","Corebridge","American Amicable","Transamerica","Ethos","Fidelity"];
+async function renderOrientation(){
+  var el=document.getElementById("s-orientation");
+  el.innerHTML='<h2>Inbound Orientation</h2><p class="muted">Carrier contracts, tool sign-ins, and exam certification per agent.</p><div class="card" id="ormissing"></div><div class="card" id="ortbl">Loading…</div>';
+  var r=await api("/admin"); var d=await r.json(); var agents=(d.agents||[]);
+  function cell(a,name){var s=((a.orientation||{}).items||{})[name];if(!s)return '<td class="muted">—</td>';if(s.status==="uploaded")return '<td><a href="#" class="ok" onclick="viewUpload(\''+esc(a.email)+'\',\''+esc(s.slug||"")+'\',\''+esc(name)+'\');return false">✓ view</a></td>';return '<td class="err">✗ none</td>';}
+  var head='<tr><th>Agent</th>'+CARRIERS.map(function(c){return '<th title="'+c+'">'+c.split(" ").map(function(w){return w[0]}).join("")+'</th>'}).join("")+'<th>Toolkits</th><th>Dialpad</th><th>Exam (80%)</th></tr>';
+  var rows=agents.map(function(a){var o=a.orientation||{};var exam=o.exam?(o.exam.passed?'<span class="ok">✓ '+o.exam.score+'%</span>':'<span class="err">'+o.exam.score+'%</span>'):'<span class="muted">—</span>';return '<tr><td>'+esc(a.name)+'<div class="muted">'+esc(a.email)+'</div></td>'+CARRIERS.map(function(c){return cell(a,c)}).join("")+cell(a,"Insurance Toolkits")+cell(a,"Dialpad")+'<td>'+exam+'</td></tr>';}).join("");
+  document.getElementById("ortbl").innerHTML=agents.length?'<table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No agents have started orientation yet.</p>';
+  var missing={};agents.forEach(function(a){var items=(a.orientation||{}).items||{};CARRIERS.forEach(function(c){if(items[c]&&items[c].status==="dont_have"){(missing[c]=missing[c]||[]).push(a.name);}});});
+  var mk=Object.keys(missing);
+  document.getElementById("ormissing").innerHTML='<h3 style="margin-top:0"><i class="ti ti-alert-triangle" style="color:#b88a1e;vertical-align:-2px"></i> Missing carrier contracts</h3>'+(mk.length?mk.map(function(c){return '<div style="margin:6px 0;padding:8px 10px;background:#faf2d6;border-radius:8px"><b>'+esc(c)+'</b> — '+missing[c].map(esc).join(", ")+'</div>';}).join(""):'<p class="muted">No agent has reported a missing contract.</p>');
+}
+async function viewUpload(email,slug,name){
+  var r=await api("/upload?email="+encodeURIComponent(email)+"&slug="+encodeURIComponent(slug));
+  var dataURL=(await r.text()).trim();
+  if(!dataURL){toast("No image found");return;}
+  var w=window.open("","_blank");
+  if(w)w.document.write('<title>'+esc(name)+' — '+esc(email)+'</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+dataURL+'" style="max-width:100%;max-height:100vh"></body>');
 }
 
 // ---------- CURRICULUM ----------
