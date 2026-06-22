@@ -132,6 +132,13 @@
   function checkBadges() { BADGES.forEach(function (b) { if (!state.badges[b.id] && b.on()) { state.badges[b.id] = true; save(); toast("Badge unlocked · " + b.t, true); } }); }
 
   function escp(s) { return (s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+  function videoSrc(v) {
+    v = String(v || "");
+    if (v.indexOf("yt:") === 0) return "https://www.youtube.com/embed/" + v.slice(3);
+    if (/youtu/.test(v)) { var m = v.match(/(?:v=|youtu\.be\/|embed\/)([A-Za-z0-9_-]{11})/); return "https://www.youtube.com/embed/" + (m ? m[1] : v); }
+    if (/^[A-Za-z0-9_-]{11}$/.test(v)) return "https://www.youtube.com/embed/" + v;
+    return "https://drive.google.com/file/d/" + v + "/preview";
+  }
   function inline(s) { return escp(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
   function md(src) {
     var lines = (src || "").split("\n"), out = [], i = 0;
@@ -337,7 +344,7 @@
     var m = lessonModule[id];
     var h = '<button class="back" onclick="eaGo(\'curriculum\')"><i class="ti ti-arrow-left"></i> ' + escp(m.title) + '</button><h1>' + escp(lessonTitle(l)) + '</h1><p class="sub"><span class="typetag">' + l.type + '</span> &nbsp;+' + (l.xp || 0) + ' XP</p>';
     if (l.type === "library") { view.innerHTML = h + '<div id="lib"></div>'; videolib(curTrack().id, "lib"); return; }
-    if (l.type === "video" && l.video) h += '<div class="vidwrap"><iframe src="https://drive.google.com/file/d/' + l.video + '/preview" allow="autoplay" allowfullscreen></iframe></div><p class="sub" style="font-size:12px"><i class="ti ti-info-circle" style="vertical-align:-2px"></i> Streaming from your Drive.</p>';
+    if (l.type === "video" && l.video) h += '<div class="vidwrap"><iframe src="' + videoSrc(l.video) + '" allow="autoplay" allowfullscreen></iframe></div>';
     if (l.body) h += '<div class="content">' + md(l.body) + '</div>';
     if (l.type === "doc") h += '<div class="content" id="docbody"><p class="sub"><i class="ti ti-loader"></i> Decrypting document…</p></div>';
     h += '<div id="lextra"></div>';
@@ -430,7 +437,7 @@
     var vids = VIDEOS.filter(function (v) { return v.track === tid; });
     var html = (mount ? "" : '<h1>Video library</h1><p class="sub">' + vids.length + ' training videos for the ' + escp(curTrack().title) + ' track, streaming from your Drive.</p>') +
       '<div class="grid" style="grid-template-columns:1fr 1fr">' + vids.map(function (v) {
-        return '<div class="card" style="padding:0;overflow:hidden"><div class="vidwrap" style="margin:0;border-radius:0;border:0;border-bottom:1px solid var(--line)"><iframe src="https://drive.google.com/file/d/' + v.id + '/preview" allowfullscreen></iframe></div><div style="padding:10px 12px;font-size:13px;font-weight:500">' + escp(v.t) + '</div></div>';
+        return '<div class="card" style="padding:0;overflow:hidden"><div class="vidwrap" style="margin:0;border-radius:0;border:0;border-bottom:1px solid var(--line)"><iframe src="' + videoSrc(v.id) + '" allowfullscreen></iframe></div><div style="padding:10px 12px;font-size:13px;font-weight:500">' + escp(v.t) + '</div></div>';
       }).join("") + '</div>';
     if (mount) document.getElementById(mount).innerHTML = html; else view.innerHTML = html;
   }
