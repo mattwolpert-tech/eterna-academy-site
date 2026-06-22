@@ -119,11 +119,11 @@ function tab(t){document.querySelectorAll(".tab").forEach(function(b){b.classLis
 // ---------- AGENTS ----------
 async function renderAgents(){
   var el=document.getElementById("s-agents");
-  el.innerHTML='<h2>Agent progress</h2><p class="muted">Live completion across the floor.</p><div class="card" id="agtbl">Loading…</div>';
+  el.innerHTML='<div class="row" style="justify-content:space-between;align-items:flex-end"><div><h2 style="margin:0">Agent progress</h2><p class="muted" style="margin:0">Live completion across the floor.</p></div><button class="btn" onclick="exportAgentsCSV()">&#11015; Export CSV</button></div><div class="card" id="agtbl" style="margin-top:12px">Loading…</div>';
   var r=await api("/admin"); var d=await r.json();
-  var a=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp});
+  var a=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp}); window._agents=a;
   if(!a.length){document.getElementById("agtbl").innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
-  var tot={};(DATA.tracks||[]).forEach(function(t){var n=0;t.modules.forEach(function(m){n+=m.lessons.length;});tot[t.id]=n;});
+  var tot={};(DATA.tracks||[]).forEach(function(t){var n=0;t.modules.forEach(function(m){n+=m.lessons.length;});tot[t.id]=n;}); window._trackTot=tot;
   var rows=a.map(function(x,i){
     var total=tot[x.track]||0,pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0;
     var bar='<div style="height:5px;background:#e7e2d6;border-radius:3px;width:84px;margin-top:3px"><div style="height:5px;background:#2d6a56;border-radius:3px;width:'+pct+'%"></div></div>';
@@ -133,6 +133,24 @@ async function renderAgents(){
   document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
+function csvCell(v){v=(v==null?"":String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
+function exportAgentsCSV(){
+  var a=window._agents||[],tot=window._trackTot||{};
+  if(!a.length){toast("No agents to export");return;}
+  var hdr=["#","Name","Email","Phone","Program","Upline","Track","% Complete","Pages done","Total pages","Level","XP","Badges","Certs","Exam","Expectations signed","Last active"];
+  var lines=[hdr.map(csvCell).join(",")];
+  a.forEach(function(x,i){
+    var total=tot[x.track]||0,pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0,o=x.orientation||{};
+    var exam=o.exam?(o.exam.score+"% "+(o.exam.passed?"PASS":"fail")):"";
+    var ack=(o.ack&&o.ack.agreed)?(o.ack.date||"signed"):"";
+    lines.push([i+1,x.name,x.email,x.number,x.program,x.upline,x.track,pct+"%",x.lessons||0,total,(x.level+1),x.xp||0,x.badges||0,(x.certs||[]).length,exam,ack,x.updated?new Date(x.updated).toLocaleDateString():""].map(csvCell).join(","));
+  });
+  var blob=new Blob(["﻿"+lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+  var url=URL.createObjectURL(blob),dl=document.createElement("a");
+  dl.href=url;dl.download="eterna-academy-progress-"+new Date().toISOString().slice(0,10)+".csv";
+  document.body.appendChild(dl);dl.click();dl.remove();URL.revokeObjectURL(url);
+  toast("Exported "+a.length+" agents");
+}
 async function resetPw(email){
   var np=prompt("Set a new temporary password for "+email+".\nGive it to the agent — they can sign in with it, then change it themselves via “Forgot password”.");
   if(np===null)return; np=(np||"").trim();
