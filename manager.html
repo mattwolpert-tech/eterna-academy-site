@@ -216,6 +216,7 @@ function leTypeDefs(){
       +'<button onclick="mdIns(\'[\',\'](https://)\',\'link text\')">&#128279; Link</button>'
       +'<button onclick="mdIns(\'\\n![\',\'](/assets/image.png)\',\'caption\')">&#128247; Image</button>'
       +'<button onclick="insTable()">&#9638; Table</button>'
+      +'<button onclick="uploadImage()" title="Upload a photo or screenshot">&#128247; Upload image</button>'
       +'</div>'
       +'<textarea id="le_body" style="min-height:200px" oninput="mdPreview()" placeholder="Write the lesson here. Highlight text and click a button to format it.">'+esc(l._body||l.body||"")+'</textarea>'
       +'<label>Live preview — exactly what agents see</label><div class="preview" id="le_preview"></div>';
@@ -241,6 +242,33 @@ function insTable(){mdIns("\n| Column A | Column B |\n| --- | --- |\n| value | v
 function vidId(s){s=(s||"").trim();var m=s.match(/[?&]v=([A-Za-z0-9_-]{11})/);if(m)return m[1];m=s.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);if(m)return m[1];m=s.match(/\/d\/([A-Za-z0-9_-]+)/);if(m)return m[1];m=s.match(/[?&]id=([A-Za-z0-9_-]+)/);if(m)return m[1];return s;}
 function mdIns(before,after,ph){var ta=document.getElementById("le_body");if(!ta)return;var s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;var sel=v.slice(s,e)||ph||"";ta.value=v.slice(0,s)+before+sel+after+v.slice(e);ta.focus();ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;mdPreview();}
 function mdPreview(){var ta=document.getElementById("le_body"),pv=document.getElementById("le_preview");if(ta&&pv)pv.innerHTML=mdRender(ta.value);}
+function uploadImage(){
+  var ta=document.getElementById("le_body");if(!ta)return;
+  var inp=document.createElement("input");inp.type="file";inp.accept="image/*";
+  inp.onchange=function(){
+    var f=inp.files[0];if(!f)return;toast("Adding image…");
+    var rd=new FileReader();
+    rd.onload=function(){
+      var img=new Image();
+      img.onload=function(){
+        var max=900,w=img.width,hh=img.height;
+        if(w>max){hh=Math.round(hh*max/w);w=max;}
+        var cv=document.createElement("canvas");cv.width=w;cv.height=hh;
+        cv.getContext("2d").drawImage(img,0,0,w,hh);
+        var url=cv.toDataURL("image/jpeg",0.72);
+        var cap=(f.name||"image").replace(/\.[^.]+$/,"");
+        var ins="\n!["+cap+"]("+url+")\n";
+        var s=ta.selectionStart||ta.value.length;
+        ta.value=ta.value.slice(0,s)+ins+ta.value.slice(s);
+        mdPreview();toast("Image added ("+Math.round(url.length/1024)+" KB) — Save to publish");
+      };
+      img.onerror=function(){toast("Could not read that image");};
+      img.src=rd.result;
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
 function mdRender(src){var lines=(src||"").split("\n"),out=[],i=0;function inl(s){return esc(s).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");}
   while(i<lines.length){var ln=lines[i];
     if(/^### /.test(ln)){out.push("<h3>"+inl(ln.slice(4))+"</h3>");i++;continue;}
