@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 470" font-family="'DM Sans',Segoe UI,sans-serif">
+  <rect width="980" height="470" rx="16" fill="#F5F3EF"/>
+  <text x="40" y="50" font-family="Georgia,serif" font-weight="700" font-size="26" fill="#667066">Eterna Brand Guidelines</text>
+  <rect x="40" y="60" width="70" height="4" fill="#667066"/>
+
+  <text x="40" y="98" font-size="14" font-weight="700" fill="#60584F">Primary color palette</text>
+  <!-- swatches -->
+  <g font-size="12">
+    <rect x="40"  y="110" width="170" height="96" rx="10" fill="#667066"/>
+    <text x="54" y="180" fill="#fff" font-weight="700">Moss Stone</text><text x="54" y="197" fill="#e7ece7">#667066</text>
+    <rect x="222" y="110" width="170" height="96" rx="10" fill="#9BA892"/>
+    <text x="236" y="180" fill="#fff" font-weight="700">Sage Mist</text><text x="236" y="197" fill="#f1f4ef">#9BA892</text>
+    <rect x="404" y="110" width="170" height="96" rx="10" fill="#60584F"/>
+    <text x="418" y="180" fill="#fff" font-weight="700">Muted Espresso</text><text x="418" y="197" fill="#e9e5e1">#60584F</text>
+    <rect x="586" y="110" width="170" height="96" rx="10" fill="#F5F3EF" stroke="#d9d4cb"/>
+    <text x="600" y="180" fill="#60584F" font-weight="700">Soft Ivory</text><text x="600" y="197" fill="#8a8278">#F5F3EF</text>
+    <rect x="768" y="110" width="170" height="96" rx="10" fill="#8D86DF"/>
+    <text x="782" y="174" fill="#fff" font-weight="700">Harbor Blue</text><text x="782" y="191" fill="#ece9fb">#8D86DF</text>
+    <text x="782" y="200" fill="#ece9fb" font-size="10">accent only</text>
+  </g>
+
+  <text x="40" y="252" font-size="14" font-weight="700" fill="#60584F">Typography</text>
+  <g>
+    <rect x="40" y="266" width="290" height="170" rx="12" fill="#fff" stroke="#e4ddd2"/>
+    <text x="60" y="306" font-size="30" font-weight="700" fill="#667066" letter-spacing="4">Kiona</text>
+    <text x="60" y="330" font-size="12" font-weight="700" fill="#60584F">PRIMARY</text>
+    <text x="60" y="356" font-size="12" fill="#6b6258">Titles · Heading 1 · Logo · CTAs</text>
+    <text x="60" y="378" font-size="11" fill="#9a9288">Letter spacing 160 · Line 1.4</text>
+
+    <rect x="345" y="266" width="290" height="170" rx="12" fill="#fff" stroke="#e4ddd2"/>
+    <text x="365" y="306" font-size="30" font-weight="700" fill="#667066" letter-spacing="3">Gilroy</text>
+    <text x="365" y="330" font-size="12" font-weight="700" fill="#60584F">SECONDARY</text>
+    <text x="365" y="356" font-size="12" fill="#6b6258">Paragraphs · Heading 2–4</text>
+    <text x="365" y="378" font-size="11" fill="#9a9288">Letter spacing 155–160 · Line 1.4</text>
+
+    <rect x="650" y="266" width="290" height="170" rx="12" fill="#fff" stroke="#e4ddd2"/>
+    <text x="670" y="306" font-size="30" font-weight="700" fill="#667066">DM Sans</text>
+    <text x="670" y="330" font-size="12" font-weight="700" fill="#60584F">ACCENT</text>
+    <text x="670" y="356" font-size="12" fill="#6b6258">In-paragraph CTAs · emphasis</text>
+    <text x="670" y="378" font-size="11" fill="#9a9288">Use sparingly · Line 1.4</text>
+  </g>
+</svg>
