@@ -109,8 +109,8 @@ async function renderAgents(){
   var r=await api("/admin"); var d=await r.json();
   var a=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp});
   if(!a.length){document.getElementById("agtbl").innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
-  var rows=a.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+'</div></td><td><span class="pill">'+esc(x.track||"-")+'</span></td><td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.lessons||0)+'</td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td></tr>';}).join("");
-  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Track</th><th>Level</th><th>XP</th><th>Lessons</th><th>Badges</th><th>Certs</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  var rows=a.map(function(x,i){return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td><td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.lessons||0)+'</td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td></tr>';}).join("");
+  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>Level</th><th>XP</th><th>Lessons</th><th>Badges</th><th>Certs</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
 // ---------- ORIENTATION ----------

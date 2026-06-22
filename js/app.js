@@ -18,6 +18,7 @@
 
   var KEY = "eterna_academy_v2";
   var state = load();
+  (function () { try { var pr = JSON.parse(localStorage.getItem("ea_profile") || "null"); if (pr && pr.email) state.identity = { name: pr.name, email: pr.email, number: pr.number, program: pr.program, upline: pr.upline }; } catch (e) {} })();
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s) return s; } catch (e) {}
     return { track: null, identity: null, orientation: {}, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, streak: 1, lastActive: today() };
@@ -31,6 +32,7 @@
     var li = levelInfo();
     var payload = {
       pw: sessionStorage.getItem("ea_pw"), email: state.identity.email, name: state.identity.name,
+      number: state.identity.number, program: state.identity.program, upline: state.identity.upline,
       track: state.track, xp: li.xp, level: li.idx, lessons: Object.keys(state.completed).length,
       badges: Object.keys(state.badges).length,
       certs: TRACKS.filter(trackComplete).map(function (t) { return t.id; }),
@@ -189,7 +191,7 @@
     n.addEventListener("click", function () {
       var t = n.dataset.go;
       if (t === "switch") { state.track = null; save(); go("dashboard"); return; }
-      if (t === "reset") { if (confirm("Reset all progress?")) { localStorage.removeItem(KEY); state = load(); go("dashboard"); } return; }
+      if (t === "reset") { if (confirm("Sign out of Eterna Academy?")) { localStorage.removeItem(KEY); localStorage.removeItem("ea_profile"); sessionStorage.removeItem("ea_pw"); location.reload(); } return; }
       go(t);
     });
   });
