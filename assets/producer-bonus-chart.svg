@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 540" font-family="'DM Sans',Segoe UI,sans-serif">
+  <defs><style>
+    .pine{fill:#1a3c34}.pine2{fill:#2d6a56}.gold{fill:#f5c842}.gold2{fill:#b88a1e}.cream{fill:#f6f3ec}
+    .ink{fill:#22302c}.mut{fill:#6b7770}.wht{fill:#fff}
+    .h{font-family:'Playfair Display',Georgia,serif}.b{font-weight:700}
+  </style></defs>
+  <rect width="980" height="540" rx="16" fill="#f6f3ec"/>
+  <text x="40" y="48" class="h b pine" font-size="26">Producer Bonus Program</text>
+  <rect x="40" y="58" width="70" height="4" class="gold"/>
+  <text x="40" y="82" class="mut" font-size="13">Monthly effectuated AP → cash bonus  ·  effective Jan 1, 2026</text>
+
+  <!-- baseline -->
+  <line x1="96" y1="380" x2="864" y2="380" stroke="#d7cfbf"/>
+  <!-- bars: heights scaled to $8000=260px -->
+  <!-- $20k/$650=21 -->
+  <rect x="104" y="359" width="84" height="21" rx="4" class="pine2"/>
+  <text x="146" y="351" text-anchor="middle" class="gold2 b" font-size="13">$650</text>
+  <text x="146" y="400" text-anchor="middle" class="ink b" font-size="13">$20K</text>
+  <!-- $30k/$1200=39 -->
+  <rect x="238" y="341" width="84" height="39" rx="4" class="pine2"/>
+  <text x="280" y="333" text-anchor="middle" class="gold2 b" font-size="13">$1,200</text>
+  <text x="280" y="400" text-anchor="middle" class="ink b" font-size="13">$30K</text>
+  <!-- $40k/$1600=52 -->
+  <rect x="372" y="328" width="84" height="52" rx="4" class="pine2"/>
+  <text x="414" y="320" text-anchor="middle" class="gold2 b" font-size="13">$1,600</text>
+  <text x="414" y="400" text-anchor="middle" class="ink b" font-size="13">$40K</text>
+  <!-- $50k/$2000=65 -->
+  <rect x="506" y="315" width="84" height="65" rx="4" class="pine2"/>
+  <text x="548" y="307" text-anchor="middle" class="gold2 b" font-size="13">$2,000</text>
+  <text x="548" y="400" text-anchor="middle" class="ink b" font-size="13">$50K</text>
+  <!-- $75k/$4000=130 -->
+  <rect x="640" y="250" width="84" height="130" rx="4" class="pine"/>
+  <text x="682" y="242" text-anchor="middle" class="gold2 b" font-size="13">$4,000</text>
+  <text x="682" y="400" text-anchor="middle" class="ink b" font-size="13">$75K</text>
+  <!-- $100k/$8000=260 -->
+  <rect x="774" y="120" width="84" height="260" rx="4" class="pine"/>
+  <rect x="774" y="120" width="84" height="10" rx="4" class="gold"/>
+  <text x="816" y="112" text-anchor="middle" class="gold2 b" font-size="15">$8,000</text>
+  <text x="816" y="400" text-anchor="middle" class="ink b" font-size="13">$100K</text>
+
+  <!-- persistency multiplier -->
+  <text x="40" y="448" class="ink b" font-size="14">3-month persistency multiplier  ·  final bonus = payout × this %</text>
+  <g font-size="12.5" class="b">
+    <rect x="40" y="462" width="210" height="46" rx="10" fill="#fff" stroke="#e2dccd"/>
+    <text x="58" y="484" class="pine">85%+</text><text x="232" y="484" text-anchor="end" class="gold2">100%</text>
+    <rect x="266" y="462" width="210" height="46" rx="10" fill="#fff" stroke="#e2dccd"/>
+    <text x="284" y="484" class="pine">80% – 84.99%</text><text x="458" y="484" text-anchor="end" class="gold2">75%</text>
+    <rect x="492" y="462" width="210" height="46" rx="10" fill="#fff" stroke="#e2dccd"/>
+    <text x="510" y="484" class="pine">75% – 79.99%</text><text x="684" y="484" text-anchor="end" class="gold2">50%</text>
+    <rect x="718" y="462" width="146" height="46" rx="10" fill="#fff" stroke="#e2dccd"/>
+    <text x="736" y="484" class="pine">Below 75%</text><text x="846" y="484" text-anchor="end" fill="#c2410c">0%</text>
+  </g>
+</svg>

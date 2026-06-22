@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 420" font-family="'DM Sans',Segoe UI,sans-serif">
+  <defs><style>
+    .pine{fill:#1a3c34}.pine2{fill:#2d6a56}.gold{fill:#f5c842}.gold2{fill:#b88a1e}.cream{fill:#f6f3ec}
+    .ink{fill:#22302c}.mut{fill:#6b7770}.wht{fill:#fff}
+    .h{font-family:'Playfair Display',Georgia,serif}.b{font-weight:700}
+  </style></defs>
+  <rect width="980" height="420" rx="16" fill="#f6f3ec"/>
+  <text x="40" y="48" class="h b pine" font-size="26">Agency Cash Bonus Program</text>
+  <rect x="40" y="58" width="70" height="4" class="gold"/>
+  <rect x="600" y="30" width="340" height="34" rx="17" class="pine"/>
+  <text x="770" y="52" text-anchor="middle" class="wht b" font-size="13">$250,000+ monthly to be eligible</text>
+  <text x="40" y="84" class="mut" font-size="13">Cash bonus = % of monthly production, set by 3-month persistency</text>
+
+  <line x1="96" y1="320" x2="884" y2="320" stroke="#d7cfbf"/>
+  <!-- bars scaled 1%=200px -->
+  <!-- Tier1 85%+ 1% -->
+  <rect x="150" y="120" width="120" height="200" rx="5" class="pine"/>
+  <rect x="150" y="120" width="120" height="10" rx="5" class="gold"/>
+  <text x="210" y="110" text-anchor="middle" class="gold2 b" font-size="18">1%</text>
+  <text x="210" y="344" text-anchor="middle" class="ink b" font-size="13">TIER 1</text>
+  <text x="210" y="362" text-anchor="middle" class="mut" font-size="12">85%+</text>
+  <!-- Tier2 80-84.99 0.75% -->
+  <rect x="330" y="170" width="120" height="150" rx="5" class="pine2"/>
+  <text x="390" y="160" text-anchor="middle" class="gold2 b" font-size="16">0.75%</text>
+  <text x="390" y="344" text-anchor="middle" class="ink b" font-size="13">TIER 2</text>
+  <text x="390" y="362" text-anchor="middle" class="mut" font-size="12">80% – 84.99%</text>
+  <!-- Tier3 75-79.99 0.50% -->
+  <rect x="510" y="220" width="120" height="100" rx="5" class="pine2"/>
+  <text x="570" y="210" text-anchor="middle" class="gold2 b" font-size="16">0.50%</text>
+  <text x="570" y="344" text-anchor="middle" class="ink b" font-size="13">TIER 3</text>
+  <text x="570" y="362" text-anchor="middle" class="mut" font-size="12">75% – 79.99%</text>
+  <!-- Tier4 below75 0.25% -->
+  <rect x="690" y="270" width="120" height="50" rx="5" fill="#9aa6a0"/>
+  <text x="750" y="260" text-anchor="middle" class="gold2 b" font-size="16">0.25%</text>
+  <text x="750" y="344" text-anchor="middle" class="ink b" font-size="13">TIER 4</text>
+  <text x="750" y="362" text-anchor="middle" class="mut" font-size="12">Below 75%</text>
+</svg>
