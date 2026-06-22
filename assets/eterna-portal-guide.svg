@@ -1,0 +1,104 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 620" font-family="'DM Sans',Segoe UI,sans-serif">
+  <defs>
+    <style>
+      .pine{fill:#1a3c34}.pine2{fill:#2d6a56}.gold{fill:#f5c842}.cream{fill:#f6f3ec}
+      .ink{fill:#22302c}.mut{fill:#6b7770}.wht{fill:#fff}
+      .h{font-family:'Playfair Display',Georgia,serif}.b{font-weight:700}
+      .nav{font-size:13px;fill:#3a4a44}.navsel{font-size:13px;font-weight:700;fill:#1a3c34}
+    </style>
+  </defs>
+  <rect width="980" height="620" rx="16" fill="#eef1ef"/>
+
+  <!-- Sidebar -->
+  <rect x="0" y="0" width="270" height="620" rx="16" fill="#ffffff"/>
+  <rect x="254" y="0" width="16" height="620" fill="#ffffff"/>
+  <!-- logo -->
+  <circle cx="34" cy="40" r="15" fill="none" stroke="#7e9183" stroke-width="3"/>
+  <circle cx="27" cy="44" r="9" fill="none" stroke="#7e9183" stroke-width="3"/>
+  <circle cx="41" cy="44" r="9" fill="none" stroke="#7e9183" stroke-width="3"/>
+  <text x="62" y="46" class="h b" font-size="20" letter-spacing="3" fill="#6b7770">ETERNA</text>
+  <line x1="20" y1="68" x2="250" y2="68" stroke="#ececec"/>
+
+  <!-- nav items -->
+  <g>
+    <rect x="16" y="84" width="238" height="34" rx="9" fill="#f1f4f2"/>
+    <rect x="28" y="95" width="12" height="12" rx="2" class="pine"/>
+    <text x="50" y="105" class="navsel">Submission Dashboard</text>
+
+    <rect x="28" y="133" width="12" height="12" rx="2" fill="#9aa6a0"/>
+    <text x="50" y="143" class="nav">Effectuation Report</text>
+
+    <rect x="28" y="167" width="12" height="12" rx="2" fill="#9aa6a0"/>
+    <text x="50" y="177" class="nav">Policies</text>
+
+    <path d="M34 201 l7 12 h-14 z" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="211" class="nav">Action Needed</text>
+
+    <circle cx="30" cy="239" r="3" fill="none" stroke="#9aa6a0" stroke-width="2"/><circle cx="38" cy="245" r="3" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="245" class="nav">Hierarchies</text>
+
+    <circle cx="34" cy="277" r="7" fill="none" stroke="#9aa6a0" stroke-width="2"/><text x="31" y="281" font-size="9" class="mut">$</text>
+    <text x="50" y="279" class="nav">Commissions</text>
+    <text x="244" y="279" class="mut" font-size="11">v</text>
+
+    <path d="M28 318 l6 -8 l6 5 l6 -10" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="313" class="nav">Live Sales Dashboard</text>
+
+    <circle cx="34" cy="345" r="6" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="347" class="nav">Eterna Leaderboard</text>
+
+    <path d="M28 377 q4 -6 9 0" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="381" class="nav">Calls</text>
+    <text x="244" y="381" class="mut" font-size="11">v</text>
+
+    <rect x="28" y="405" width="12" height="11" rx="2" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="415" class="nav">Evie AI</text>
+
+    <rect x="28" y="439" width="11" height="11" rx="2" fill="none" stroke="#9aa6a0" stroke-width="2"/>
+    <text x="50" y="449" class="nav">Agent Management</text>
+  </g>
+
+  <!-- support card -->
+  <rect x="16" y="520" width="238" height="74" rx="12" fill="#eef3f0"/>
+  <text x="34" y="548" class="ink b" font-size="12">Need Help?</text>
+  <text x="34" y="565" class="mut" font-size="11">We're here for you.</text>
+  <rect x="34" y="572" width="202" height="14" rx="7" fill="#cfddd4"/>
+  <text x="135" y="582" text-anchor="middle" class="pine b" font-size="9">Contact Support</text>
+
+  <!-- Main panel -->
+  <text x="300" y="56" class="h b pine" font-size="30">Submission Dashboard</text>
+  <rect x="300" y="66" width="60" height="4" class="gold"/>
+  <text x="300" y="92" class="mut" font-size="13">portal.goeterna.com — your back office</text>
+
+  <!-- stat cards -->
+  <g>
+    <rect x="300" y="112" width="200" height="96" rx="14" fill="#fff" stroke="#e2e6e3"/>
+    <text x="318" y="140" class="mut" font-size="12">Submitted AP</text>
+    <text x="318" y="174" class="h b pine" font-size="26">$28,450</text>
+
+    <rect x="516" y="112" width="200" height="96" rx="14" fill="#fff" stroke="#e2e6e3"/>
+    <text x="534" y="140" class="mut" font-size="12">Effectuated AP</text>
+    <text x="534" y="174" class="h b" font-size="26" fill="#b88a1e">$21,300</text>
+
+    <rect x="732" y="112" width="220" height="96" rx="14" fill="#1a3c34"/>
+    <text x="750" y="140" class="cream" font-size="12">Leaderboard rank</text>
+    <text x="750" y="176" class="h b gold" font-size="26">#4</text>
+  </g>
+
+  <!-- list panel -->
+  <rect x="300" y="226" width="652" height="346" rx="14" fill="#fff" stroke="#e2e6e3"/>
+  <text x="320" y="258" class="ink b" font-size="15">Recent submissions</text>
+  <line x1="316" y1="274" x2="936" y2="274" stroke="#eef1ef"/>
+  <g class="mut" font-size="12.5">
+    <text x="320" y="300">Mutual of Omaha · FE · $1,140 AP</text><text x="900" y="300" text-anchor="end" fill="#2d6a56">Active</text>
+    <line x1="316" y1="316" x2="936" y2="316" stroke="#f3f5f3"/>
+    <text x="320" y="340">F&amp;G · Accelerator Plus 14 · $9,500 AP</text><text x="900" y="340" text-anchor="end" fill="#b88a1e">Pending</text>
+    <line x1="316" y1="356" x2="936" y2="356" stroke="#f3f5f3"/>
+    <text x="320" y="380">Transamerica · Term · $760 AP</text><text x="900" y="380" text-anchor="end" fill="#2d6a56">Active</text>
+    <line x1="316" y1="396" x2="936" y2="396" stroke="#f3f5f3"/>
+    <text x="320" y="420">Corebridge · IUL · $3,000 AP</text><text x="900" y="420" text-anchor="end" fill="#c2410c">Action needed</text>
+    <line x1="316" y1="436" x2="936" y2="436" stroke="#f3f5f3"/>
+    <text x="320" y="460">Foresters · InstaBrain Term · $540 AP</text><text x="900" y="460" text-anchor="end" fill="#2d6a56">Active</text>
+  </g>
+  <text x="320" y="540" class="mut" font-size="11.5">Calls · Transcripts · Inbound Calls · Admin Inbound · Call Analysis  —  review your call &amp; transfer recaps here</text>
+</svg>
