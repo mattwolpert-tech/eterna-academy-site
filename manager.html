@@ -37,6 +37,20 @@
   .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--green);color:#fff;padding:10px 18px;border-radius:9px;opacity:0;transition:.3s;pointer-events:none}
   .toast.show{opacity:1}
   .screen{display:none}.screen.on{display:block}
+  .typecard{display:inline-flex;flex-direction:column;align-items:center;gap:3px;padding:8px 14px;border:1px solid var(--line);border-radius:9px;background:#fff;cursor:pointer;color:var(--txt2);min-width:78px;font-size:12px}
+  .typecard.on{border-color:var(--green2);background:#eef4f1;color:var(--green);font-weight:600}
+  .typecard i{font-size:18px}
+  .mdbar{display:flex;flex-wrap:wrap;gap:4px;margin:4px 0}
+  .mdbar button{padding:5px 9px;border:1px solid var(--line);background:#fff;border-radius:6px;cursor:pointer;font-size:12px;color:var(--green)}
+  .mdbar button:hover{background:#eef4f1}
+  .preview{border:1px solid var(--line);border-radius:8px;padding:10px 14px;background:#fbfbf9;font-size:13px;line-height:1.5}
+  .preview h2{font-size:17px;border:none;padding:0;margin:8px 0 4px}.preview h3{font-size:14px;margin:8px 0 3px}
+  .preview table{font-size:12px}.preview img{max-width:100%;border-radius:8px}.preview code{background:#eef2f0;padding:1px 5px;border-radius:4px}
+  .picklist{max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:8px;padding:6px;background:#fff}
+  .pickitem{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:6px;cursor:pointer}.pickitem:hover{background:#f0f4f1}
+  .mod.collapsed .les{display:none}
+  .modh i{color:var(--green2)}
+  .les .lt:hover{color:var(--green2);text-decoration:underline}
 </style>
 </head>
 <body>
@@ -138,13 +152,17 @@ async function viewUpload(email,slug,name){
 // ---------- CURRICULUM ----------
 function renderCurriculum(){
   var el=document.getElementById("s-curriculum");
-  var h='<div class="row" style="justify-content:space-between"><h2>Curriculum</h2><button class="btn" onclick="saveStructure()">Save & publish</button></div><p class="muted">Edit titles, add/remove/reorder modules &amp; lessons. Changes go live for agents on their next load.</p>';
+  window._collapsed=window._collapsed||{};
+  var h='<div class="row" style="justify-content:space-between"><h2>Curriculum builder</h2><button class="btn" onclick="saveStructure()">Save & publish</button></div><p class="muted">Build <b>tracks → modules → lessons</b>. Click a lesson to edit it. Use the ▾ arrow to collapse a module. Remember to <b>Save & publish</b> when done.</p>';
   DATA.tracks.forEach(function(t,ti){
-    h+='<div class="card"><div class="row" style="justify-content:space-between"><h3 style="margin:0">'+esc(t.title)+' <span class="muted">('+t.id+')</span></h3></div>';
+    var lcount=t.modules.reduce(function(n,m){return n+m.lessons.length;},0);
+    h+='<div class="card"><h3 style="margin:0 0 8px">'+esc(t.title)+' <span class="muted" style="font-size:12px;font-weight:400">'+t.modules.length+' modules · '+lcount+' lessons</span></h3>';
     t.modules.forEach(function(m,mi){
-      h+='<div class="mod"><div class="modh"><i class="ti '+esc(m.icon||"ti-folder")+'"></i><input value="'+esc(m.title)+'" onchange="setMod('+ti+','+mi+',\'title\',this.value)" style="flex:1;font-weight:600"><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',-1)">↑</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',1)">↓</button><button class="btn danger s" onclick="delMod('+ti+','+mi+')">Delete</button></div>';
+      var ck=t.id+"_"+m.id, coll=window._collapsed[ck];
+      h+='<div class="mod'+(coll?" collapsed":"")+'"><div class="modh"><button class="btn ghost s" style="border:none;padding:1px 6px;font-size:14px" title="Collapse" onclick="toggleMod(\''+ck+'\')">'+(coll?"▸":"▾")+'</button><i class="ti '+esc(m.icon||"ti-folder")+'"></i><input value="'+esc(m.title)+'" onchange="setMod('+ti+','+mi+',\'title\',this.value)" style="flex:1;font-weight:600"><span class="muted" style="font-size:11px">'+m.lessons.length+'</span><button class="btn ghost s" title="Module icon" onclick="pickIcon('+ti+','+mi+')">icon</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',-1)">↑</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',1)">↓</button><button class="btn danger s" onclick="delMod('+ti+','+mi+')">Delete</button></div>';
       m.lessons.forEach(function(l,li){
-        h+='<div class="les"><span class="pill">'+esc(l.type)+'</span><input class="lt" value="'+esc(l.title||(l.doc?(DATA.docs[l.doc]&&DATA.docs[l.doc].t)||l.doc:l.id))+'" onchange="setLes('+ti+','+mi+','+li+',\'title\',this.value)"><input style="width:64px" type="number" value="'+(l.xp||0)+'" title="XP" onchange="setLes('+ti+','+mi+','+li+',\'xp\',+this.value)"><button class="btn ghost s" onclick="editLesson('+ti+','+mi+','+li+')">Edit</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',-1)">↑</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',1)">↓</button><button class="btn danger s" onclick="delLes('+ti+','+mi+','+li+')">✕</button></div>';
+        var label=l.title||(l.doc?(DATA.docs[l.doc]&&DATA.docs[l.doc].t)||l.doc:l.id);
+        h+='<div class="les"><span class="pill">'+esc(l.type)+'</span><span class="lt" style="flex:1;cursor:pointer" onclick="editLesson('+ti+','+mi+','+li+')">'+esc(label)+'</span><span class="muted" style="font-size:11px">'+(l.xp||0)+' xp</span><button class="btn ghost s" onclick="editLesson('+ti+','+mi+','+li+')">Edit</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',-1)">↑</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',1)">↓</button><button class="btn danger s" onclick="delLes('+ti+','+mi+','+li+')">✕</button></div>';
       });
       h+='<div class="les"><button class="btn ghost s" onclick="addLes('+ti+','+mi+')">+ Add lesson</button></div></div>';
     });
@@ -153,14 +171,16 @@ function renderCurriculum(){
   h+='<div id="lessonEdit"></div>';
   el.innerHTML=h;
 }
+function toggleMod(k){window._collapsed[k]=!window._collapsed[k];renderCurriculum();}
+function pickIcon(ti,mi){var cur=DATA.tracks[ti].modules[mi].icon||"ti-folder";var v=prompt("Module icon — any Tabler icon name (browse them at tabler-icons.io).\nExamples: ti-flag, ti-trophy, ti-sparkles, ti-building-bank, ti-script, ti-phone, ti-headset, ti-coin, ti-brain",cur);if(v){DATA.tracks[ti].modules[mi].icon=v.trim();renderCurriculum();}}
 function setMod(ti,mi,k,v){DATA.tracks[ti].modules[mi][k]=v;}
 function setLes(ti,mi,li,k,v){DATA.tracks[ti].modules[mi].lessons[li][k]=v;}
 function moveMod(ti,mi,d){var a=DATA.tracks[ti].modules;var ni=mi+d;if(ni<0||ni>=a.length)return;var x=a.splice(mi,1)[0];a.splice(ni,0,x);renderCurriculum();}
 function moveLes(ti,mi,li,d){var a=DATA.tracks[ti].modules[mi].lessons;var ni=li+d;if(ni<0||ni>=a.length)return;var x=a.splice(li,1)[0];a.splice(ni,0,x);renderCurriculum();}
-function delMod(ti,mi){if(confirm("Delete this module?")){DATA.tracks[ti].modules.splice(mi,1);renderCurriculum();}}
+function delMod(ti,mi){if(confirm("Delete this whole module and its lessons?")){DATA.tracks[ti].modules.splice(mi,1);renderCurriculum();}}
 function delLes(ti,mi,li){if(confirm("Delete this lesson?")){DATA.tracks[ti].modules[mi].lessons.splice(li,1);renderCurriculum();}}
 function addMod(ti){var id="m"+Date.now();DATA.tracks[ti].modules.push({id:id,title:"New module",icon:"ti-folder",summary:"",lessons:[]});renderCurriculum();}
-function addLes(ti,mi){var id="l"+Date.now();DATA.tracks[ti].modules[mi].lessons.push({id:id,type:"reading",title:"New lesson",xp:30,body:""});renderCurriculum();}
+function addLes(ti,mi){var id="l"+Date.now();DATA.tracks[ti].modules[mi].lessons.push({id:id,type:"reading",title:"New lesson",xp:30,body:""});var li=DATA.tracks[ti].modules[mi].lessons.length-1;renderCurriculum();editLesson(ti,mi,li);}
 
 async function editLesson(ti,mi,li){
   var l=DATA.tracks[ti].modules[mi].lessons[li];
@@ -168,42 +188,84 @@ async function editLesson(ti,mi,li){
   var body="";
   if(l.type==="doc"&&l.doc){ var r=await fetch(API+"/body?id="+encodeURIComponent(l.doc)+"&key="+encodeURIComponent(KEY)); body=await r.text(); }
   else body=l.body||"";
-  box.innerHTML='<div class="card" style="border:2px solid var(--green2)"><h3>Edit lesson</h3>'
+  l._body=body;
+  window._le={ti:ti,mi:mi,li:li,l:l};
+  var types=[["reading","Reading","ti-file-text"],["video","Video","ti-player-play"],["quiz","Quiz","ti-help-circle"],["roleplay","Roleplay","ti-microphone-2"],["doc","Document","ti-file"],["library","Library","ti-folder"]];
+  box.innerHTML='<div class="card" style="border:2px solid var(--green2)"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Edit lesson</h3><button class="btn ghost s" onclick="closeEdit()">Close</button></div>'
     +'<label>Title</label><input id="le_title" value="'+esc(l.title||"")+'">'
-    +'<label>Type</label><select id="le_type"><option value="reading">reading</option><option value="doc">doc (document)</option><option value="video">video</option><option value="quiz">quiz</option><option value="roleplay">roleplay</option><option value="library">video library</option></select>'
-    +'<label>XP</label><input id="le_xp" type="number" value="'+(l.xp||0)+'">'
-    +'<div id="le_typdefs"></div>'
-    +'<label>Body (markdown — for reading/doc/video intro)</label><textarea id="le_body">'+esc(body)+'</textarea>'
-    +'<div class="row" style="margin-top:10px"><button class="btn" onclick="saveLesson('+ti+','+mi+','+li+')">Save lesson</button><button class="btn ghost" onclick="document.getElementById(\'lessonEdit\').innerHTML=\'\'">Close</button></div></div>';
-  document.getElementById("le_type").value=l.type;
-  leTypeDefs(l);
-  document.getElementById("le_type").onchange=function(){leTypeDefs(l)};
+    +'<label>What kind of lesson is this?</label><div class="row" style="flex-wrap:wrap;gap:6px" id="le_typecards">'+types.map(function(t){return '<button class="typecard'+(l.type===t[0]?" on":"")+'" data-ty="'+t[0]+'" onclick="setType(\''+t[0]+'\')"><i class="ti '+t[2]+'"></i>'+t[1]+'</button>';}).join("")+'</div>'
+    +'<label>Points (XP)</label><input id="le_xp" type="number" value="'+(l.xp||0)+'" style="max-width:120px">'
+    +'<div id="le_typedefs"></div>'
+    +'<div class="row" style="margin-top:14px"><button class="btn" onclick="saveLesson()">Save lesson</button><button class="btn ghost" onclick="closeEdit()">Cancel</button></div></div>';
+  leTypeDefs();
   box.scrollIntoView({behavior:"smooth"});
 }
-function leTypeDefs(l){
-  var t=document.getElementById("le_type").value;var d=document.getElementById("le_typdefs");var h="";
-  if(t==="video")h='<label>Video (Google Drive file id OR youtube id)</label><input id="le_video" value="'+esc(l.video||"")+'">';
-  if(t==="doc")h='<label>Document id (e.g. d077) — body below loads/saves this doc</label><input id="le_doc" value="'+esc(l.doc||"")+'">';
-  if(t==="quiz")h='<label>Quiz ids (comma-separated, from Quizzes tab)</label><input id="le_quizzes" value="'+esc((l.quizzes||[]).join(","))+'">';
-  if(t==="roleplay")h='<label>Roleplay ids (comma-separated)</label><input id="le_roleplay" value="'+esc((l.roleplay||[]).join(","))+'">';
+function closeEdit(){document.getElementById("lessonEdit").innerHTML="";}
+function setType(t){window._le.l.type=t;document.querySelectorAll("#le_typecards .typecard").forEach(function(b){b.classList.toggle("on",b.dataset.ty===t);});leTypeDefs();}
+function leTypeDefs(){
+  var l=window._le.l;var t=l.type;var d=document.getElementById("le_typedefs");var h="";
+  if(t==="reading"||t==="doc"){
+    if(t==="doc")h+='<label>Document id (reusable across lessons, e.g. d077)</label><input id="le_doc" value="'+esc(l.doc||"")+'">';
+    h+='<label>Content — use the buttons, no code needed</label>'
+      +'<div class="mdbar">'
+      +'<button onclick="mdIns(\'## \',\'\',\'Heading\')" title="Big heading">H2</button>'
+      +'<button onclick="mdIns(\'### \',\'\',\'Subheading\')" title="Smaller heading">H3</button>'
+      +'<button onclick="mdIns(\'**\',\'**\',\'bold text\')"><b>B</b></button>'
+      +'<button onclick="mdIns(\'\\n- \',\'\',\'list item\')">&bull; List</button>'
+      +'<button onclick="mdIns(\'\\n1. \',\'\',\'first item\')">1. List</button>'
+      +'<button onclick="mdIns(\'[\',\'](https://)\',\'link text\')">&#128279; Link</button>'
+      +'<button onclick="mdIns(\'\\n![\',\'](/assets/image.png)\',\'caption\')">&#128247; Image</button>'
+      +'<button onclick="insTable()">&#9638; Table</button>'
+      +'</div>'
+      +'<textarea id="le_body" style="min-height:200px" oninput="mdPreview()" placeholder="Write the lesson here. Highlight text and click a button to format it.">'+esc(l._body||l.body||"")+'</textarea>'
+      +'<label>Live preview — exactly what agents see</label><div class="preview" id="le_preview"></div>';
+  }
+  if(t==="video"){
+    h+='<label>Paste a Google Drive or YouTube link (we grab the id automatically)</label><input id="le_videolink" value="'+esc(l.video||"")+'" oninput="document.getElementById(\'le_video\').value=vidId(this.value)" placeholder="https://drive.google.com/file/d/... or https://youtube.com/watch?v=...">'
+      +'<label>Video id</label><input id="le_video" value="'+esc(l.video||"")+'">'
+      +'<label>Intro text above the video (optional)</label><textarea id="le_body" style="min-height:70px">'+esc(l._body||l.body||"")+'</textarea>';
+  }
+  if(t==="quiz"){
+    h+='<label>Pick the questions for this lesson ('+DATA.quizzes.length+' available)</label><div class="picklist" id="le_quizpick">'+pickQuiz(l.quizzes||[])+'</div><p class="muted" style="font-size:11px">Build new questions in the <b>Quizzes</b> tab.</p>';
+  }
+  if(t==="roleplay"){
+    h+='<label>Pick the scenarios for this lesson ('+DATA.roleplay.length+' available)</label><div class="picklist" id="le_rppick">'+pickRp(l.roleplay||[])+'</div><p class="muted" style="font-size:11px">Build new scenarios in the <b>Roleplay</b> tab.</p>';
+  }
+  if(t==="library")h+='<p class="muted">This lesson automatically shows the track\'s whole video library — no settings needed.</p>';
   d.innerHTML=h;
+  if(t==="reading"||t==="doc")mdPreview();
 }
-async function saveLesson(ti,mi,li){
-  var l=DATA.tracks[ti].modules[mi].lessons[li];
+function pickQuiz(sel){return DATA.quizzes.map(function(q){var on=sel.indexOf(q.id)>=0;return '<label class="pickitem"><input type="checkbox" style="width:auto" value="'+esc(q.id)+'" '+(on?"checked":"")+'><span class="muted" style="font-size:10px;min-width:78px">'+esc(q.id)+'</span><span style="font-size:12px">'+esc((q.q||"(no text)").slice(0,72))+'</span></label>';}).join("")||'<p class="muted">No questions yet — build them in the Quizzes tab.</p>';}
+function pickRp(sel){return DATA.roleplay.map(function(s){var on=sel.indexOf(s.id)>=0;return '<label class="pickitem"><input type="checkbox" style="width:auto" value="'+esc(s.id)+'" '+(on?"checked":"")+'><span class="muted" style="font-size:10px;min-width:78px">'+esc(s.id)+'</span><span style="font-size:12px">'+esc((s.client||"(no text)").slice(0,72))+'</span></label>';}).join("")||'<p class="muted">No scenarios yet — build them in the Roleplay tab.</p>';}
+function insTable(){mdIns("\n| Column A | Column B |\n| --- | --- |\n| value | value |\n","","");}
+function vidId(s){s=(s||"").trim();var m=s.match(/[?&]v=([A-Za-z0-9_-]{11})/);if(m)return m[1];m=s.match(/youtu\.be\/([A-Za-z0-9_-]{11})/);if(m)return m[1];m=s.match(/\/d\/([A-Za-z0-9_-]+)/);if(m)return m[1];m=s.match(/[?&]id=([A-Za-z0-9_-]+)/);if(m)return m[1];return s;}
+function mdIns(before,after,ph){var ta=document.getElementById("le_body");if(!ta)return;var s=ta.selectionStart,e=ta.selectionEnd,v=ta.value;var sel=v.slice(s,e)||ph||"";ta.value=v.slice(0,s)+before+sel+after+v.slice(e);ta.focus();ta.selectionStart=s+before.length;ta.selectionEnd=s+before.length+sel.length;mdPreview();}
+function mdPreview(){var ta=document.getElementById("le_body"),pv=document.getElementById("le_preview");if(ta&&pv)pv.innerHTML=mdRender(ta.value);}
+function mdRender(src){var lines=(src||"").split("\n"),out=[],i=0;function inl(s){return esc(s).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");}
+  while(i<lines.length){var ln=lines[i];
+    if(/^### /.test(ln)){out.push("<h3>"+inl(ln.slice(4))+"</h3>");i++;continue;}
+    if(/^## /.test(ln)){out.push("<h2>"+inl(ln.slice(3))+"</h2>");i++;continue;}
+    if(/^# /.test(ln)){out.push("<h2>"+inl(ln.slice(2))+"</h2>");i++;continue;}
+    if(/^\s*!\[[^\]]*\]\([^)]+\)\s*$/.test(ln)){var im=ln.match(/!\[([^\]]*)\]\(([^)]+)\)/);out.push('<img src="'+im[2]+'" alt="'+esc(im[1])+'">');i++;continue;}
+    if(/^\s*\|.*\|/.test(ln)){var rows=[];while(i<lines.length&&/^\s*\|.*\|/.test(lines[i])){rows.push(lines[i]);i++;}var cs=rows.map(function(r){return r.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim();});});var sep=cs[1]&&cs[1].every(function(c){return /^:?-+:?$/.test(c);});var b=cs.slice(sep?2:1);var tb="<table><thead><tr>"+cs[0].map(function(c){return "<th>"+inl(c)+"</th>";}).join("")+"</tr></thead><tbody>";b.forEach(function(r){tb+="<tr>"+r.map(function(c){return "<td>"+inl(c)+"</td>";}).join("")+"</tr>";});out.push(tb+"</tbody></table>");continue;}
+    if(/^\s*[-*] /.test(ln)){var it=[];while(i<lines.length&&/^\s*[-*] /.test(lines[i])){it.push("<li>"+inl(lines[i].replace(/^\s*[-*] /,""))+"</li>");i++;}out.push("<ul>"+it.join("")+"</ul>");continue;}
+    if(/^\s*\d+\. /.test(ln)){var ol=[];while(i<lines.length&&/^\s*\d+\. /.test(lines[i])){ol.push("<li>"+inl(lines[i].replace(/^\s*\d+\. /,""))+"</li>");i++;}out.push("<ol>"+ol.join("")+"</ol>");continue;}
+    if(ln.trim()===""){i++;continue;}
+    var p=[ln];i++;while(i<lines.length&&lines[i].trim()!==""&&!/^(#{1,3} |\s*[-*] |\s*\d+\. |\s*\|)/.test(lines[i])){p.push(lines[i]);i++;}out.push("<p>"+inl(p.join(" "))+"</p>");
+  }return out.join("");}
+async function saveLesson(){
+  var c=window._le,l=DATA.tracks[c.ti].modules[c.mi].lessons[c.li];
   l.title=document.getElementById("le_title").value;
-  l.type=document.getElementById("le_type").value;
   l.xp=+document.getElementById("le_xp").value||0;
-  var body=document.getElementById("le_body").value;
-  ["video","doc","quizzes","roleplay","body"].forEach(function(k){delete l[k];});
-  if(l.type==="video")l.video=document.getElementById("le_video").value.trim();
-  if(l.type==="doc"){l.doc=document.getElementById("le_doc").value.trim();}
-  if(l.type==="quiz")l.quizzes=document.getElementById("le_quizzes").value.split(",").map(function(s){return s.trim()}).filter(Boolean);
-  if(l.type==="roleplay")l.roleplay=document.getElementById("le_roleplay").value.split(",").map(function(s){return s.trim()}).filter(Boolean);
-  if(l.type==="doc"&&l.doc){ await api("/savebody",{method:"POST",body:JSON.stringify({id:l.doc,text:body})}); }
-  else if(body) l.body=body;
+  var t=l.type;
+  ["video","doc","quizzes","roleplay","body","_body"].forEach(function(k){delete l[k];});
+  if(t==="reading"){var b=document.getElementById("le_body").value;if(b)l.body=b;}
+  else if(t==="doc"){l.doc=(document.getElementById("le_doc").value||"").trim();var bd=document.getElementById("le_body").value;if(l.doc)await api("/savebody",{method:"POST",body:JSON.stringify({id:l.doc,text:bd})});}
+  else if(t==="video"){l.video=(document.getElementById("le_video").value||"").trim();var iv=document.getElementById("le_body");if(iv&&iv.value)l.body=iv.value;}
+  else if(t==="quiz"){l.quizzes=[].slice.call(document.querySelectorAll("#le_quizpick input:checked")).map(function(c){return c.value;});}
+  else if(t==="roleplay"){l.roleplay=[].slice.call(document.querySelectorAll("#le_rppick input:checked")).map(function(c){return c.value;});}
   await saveStructure(true);
-  document.getElementById("lessonEdit").innerHTML="";
-  renderCurriculum(); toast("Lesson saved");
+  closeEdit();renderCurriculum();toast("Lesson saved & published");
 }
 async function saveStructure(quiet){
   var r=await api("/save",{method:"POST",body:JSON.stringify({what:"structure",value:{levels:DATA.levels,tracks:DATA.tracks}})});
