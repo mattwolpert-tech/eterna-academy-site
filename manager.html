@@ -98,7 +98,7 @@ async function start(){
   document.getElementById("who").textContent="Signed in";
   var r=await fetch(API+"/content?key="+encodeURIComponent(KEY));
   DATA=await r.json();
-  renderAgents(); renderOrientation(); renderCurriculum(); renderVideos(); renderRaw("quizzes",{questions:DATA.quizzes}); renderRaw("roleplay",{scenarios:DATA.roleplay});
+  renderAgents(); renderOrientation(); renderCurriculum(); renderVideos(); renderQuizzes(); renderRoleplay();
 }
 function tab(t){document.querySelectorAll(".tab").forEach(function(b){b.classList.toggle("on",b.dataset.t===t)});document.querySelectorAll(".screen").forEach(function(s){s.classList.toggle("on",s.id==="s-"+t)});}
 
@@ -225,20 +225,67 @@ function vrows(){
 function addVid(){DATA.videos.push({t:"New video",id:"",track:"new"});vrows();}
 async function saveVideos(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"videos",value:DATA.videos})});toast(r.ok?"Videos published":"Save failed");}
 
-// ---------- RAW (quizzes / roleplay) ----------
-function renderRaw(what,obj){
-  var el=document.getElementById("s-"+what);
-  el.innerHTML='<div class="row" style="justify-content:space-between"><h2>'+(what==="quizzes"?"Quiz bank":"Roleplay scenarios")+'</h2><button class="btn" onclick="saveRaw(\''+what+'\')">Save & publish</button></div>'
-    +'<p class="muted">Structured JSON editor (full control). '+(what==="quizzes"?"Each: {id, topic, q, options:[], answer:index, xp, explain}":"Each: {id, category, client, options:[{text,score,feedback}]}")+'</p>'
-    +'<div class="card"><textarea id="raw_'+what+'" style="min-height:420px;font-family:ui-monospace,monospace;font-size:13px">'+esc(JSON.stringify(obj,null,2))+'</textarea><p id="raw_'+what+'_err" class="err" style="display:none"></p></div>';
+// ---------- QUIZZES (visual builder) ----------
+function renderQuizzes(){
+  var el=document.getElementById("s-quizzes");
+  var h='<div class="row" style="justify-content:space-between"><h2>Quiz bank</h2><div class="row"><button class="btn ghost" onclick="addQuestion()">+ Add question</button><button class="btn" onclick="saveQuizzes()">Save & publish</button></div></div>'
+    +'<p class="muted">'+DATA.quizzes.length+' questions. Type the question and answers, then click the circle to mark the correct one. Click <b>Save & publish</b> when done.</p>';
+  DATA.quizzes.forEach(function(q,i){
+    h+='<div class="card"><div class="row" style="justify-content:space-between;gap:8px">'
+      +'<input style="max-width:180px" value="'+esc(q.topic)+'" placeholder="Topic" onchange="DATA.quizzes['+i+'].topic=this.value">'
+      +'<div class="row"><span class="muted" style="font-size:11px">'+esc(q.id)+'</span><input type="number" style="width:62px" value="'+(q.xp||0)+'" title="XP" onchange="DATA.quizzes['+i+'].xp=+this.value||0"><button class="btn ghost s" title="Move up" onclick="moveQ('+i+',-1)">↑</button><button class="btn ghost s" title="Move down" onclick="moveQ('+i+',1)">↓</button><button class="btn danger s" title="Delete" onclick="delQ('+i+')">✕</button></div></div>'
+      +'<label>Question</label><textarea style="min-height:48px" onchange="DATA.quizzes['+i+'].q=this.value" placeholder="What do you want to ask?">'+esc(q.q)+'</textarea>'
+      +'<label>Answers — click the circle to mark the correct one</label>';
+    (q.options||[]).forEach(function(o,oi){
+      var on=q.answer===oi;
+      h+='<div class="row" style="gap:8px;margin:5px 0"><button onclick="setAnswer('+i+','+oi+')" title="Mark correct" style="width:26px;height:26px;border-radius:50%;flex:none;cursor:pointer;border:2px solid '+(on?'#2d6a56':'#cbd5d0')+';background:'+(on?'#2d6a56':'#fff')+';color:#fff;font-weight:700">'+(on?'✓':'')+'</button>'
+        +'<input style="flex:1" value="'+esc(o)+'" placeholder="Answer option" onchange="DATA.quizzes['+i+'].options['+oi+']=this.value">'
+        +'<button class="btn danger s" title="Remove answer" onclick="delOption('+i+','+oi+')">✕</button></div>';
+    });
+    h+='<button class="btn ghost s" onclick="addOption('+i+')">+ Add answer</button>'
+      +'<label>Explanation (shown after they answer)</label><textarea style="min-height:48px" onchange="DATA.quizzes['+i+'].explain=this.value" placeholder="Why the correct answer is right.">'+esc(q.explain||"")+'</textarea></div>';
+  });
+  if(!DATA.quizzes.length)h+='<div class="card muted">No questions yet — click "+ Add question".</div>';
+  el.innerHTML=h;
 }
-async function saveRaw(what){
-  var ta=document.getElementById("raw_"+what);var errp=document.getElementById("raw_"+what+"_err");
-  var val; try{val=JSON.parse(ta.value);}catch(e){errp.style.display="block";errp.textContent="Invalid JSON: "+e.message;return;}
-  errp.style.display="none";
-  var r=await api("/save",{method:"POST",body:JSON.stringify({what:what,value:val})});
-  if(r.ok){ if(what==="quizzes")DATA.quizzes=val.questions||[]; else DATA.roleplay=val.scenarios||[]; toast(what+" published"); } else toast("Save failed");
+function addQuestion(){var t=DATA.quizzes.length?DATA.quizzes[DATA.quizzes.length-1].topic:"General";DATA.quizzes.push({id:"q_"+Date.now(),topic:t,q:"",options:["","",""],answer:0,xp:20,explain:""});renderQuizzes();window.scrollTo(0,document.body.scrollHeight);}
+function delQ(i){if(confirm("Delete this question?")){DATA.quizzes.splice(i,1);renderQuizzes();}}
+function moveQ(i,d){var ni=i+d;if(ni<0||ni>=DATA.quizzes.length)return;var x=DATA.quizzes.splice(i,1)[0];DATA.quizzes.splice(ni,0,x);renderQuizzes();}
+function setAnswer(i,oi){DATA.quizzes[i].answer=oi;renderQuizzes();}
+function addOption(i){DATA.quizzes[i].options.push("");renderQuizzes();}
+function delOption(i,oi){var q=DATA.quizzes[i];if((q.options||[]).length<=2){toast("Keep at least 2 answers");return;}q.options.splice(oi,1);if(q.answer>=q.options.length)q.answer=q.options.length-1;else if(q.answer>oi)q.answer--;renderQuizzes();}
+async function saveQuizzes(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"quizzes",value:{questions:DATA.quizzes}})});toast(r.ok?"Quizzes published":"Save failed");}
+
+// ---------- ROLEPLAY (visual builder) ----------
+function renderRoleplay(){
+  var el=document.getElementById("s-roleplay");
+  var h='<div class="row" style="justify-content:space-between"><h2>Roleplay scenarios</h2><div class="row"><button class="btn ghost" onclick="addScenario()">+ Add scenario</button><button class="btn" onclick="saveRoleplay()">Save & publish</button></div></div>'
+    +'<p class="muted">'+DATA.roleplay.length+' scenarios. Write what the client says, add responses, and mark the best one. Every response needs coaching feedback.</p>';
+  DATA.roleplay.forEach(function(s,i){
+    h+='<div class="card"><div class="row" style="justify-content:space-between;gap:8px">'
+      +'<input style="flex:1" value="'+esc(s.category)+'" placeholder="Category (e.g. Inbound calls)" onchange="DATA.roleplay['+i+'].category=this.value">'
+      +'<div class="row"><span class="muted" style="font-size:11px">'+esc(s.id)+'</span><button class="btn ghost s" title="Move up" onclick="moveS('+i+',-1)">↑</button><button class="btn ghost s" title="Move down" onclick="moveS('+i+',1)">↓</button><button class="btn danger s" title="Delete" onclick="delS('+i+')">✕</button></div></div>'
+      +'<label>Client says</label><textarea style="min-height:48px" onchange="DATA.roleplay['+i+'].client=this.value" placeholder="The objection or line the client opens with.">'+esc(s.client)+'</textarea>'
+      +'<label>Responses — mark the best one</label>';
+    (s.options||[]).forEach(function(o,oi){
+      var best=(+o.score>=100);
+      h+='<div class="card" style="background:#f7faf8;padding:10px;margin:6px 0;border-left:4px solid '+(best?'#2d6a56':'#e0d8c8')+'">'
+        +'<div class="row" style="justify-content:space-between"><button onclick="setBest('+i+','+oi+')" class="btn s'+(best?'':' ghost')+'" style="'+(best?'background:#2d6a56;color:#fff':'')+'">'+(best?'✓ Best answer':'Mark as best')+'</button><button class="btn danger s" title="Remove response" onclick="delRpOption('+i+','+oi+')">✕</button></div>'
+        +'<label>Response</label><textarea style="min-height:44px" onchange="DATA.roleplay['+i+'].options['+oi+'].text=this.value" placeholder="What the agent says.">'+esc(o.text)+'</textarea>'
+        +'<label>Coaching feedback</label><textarea style="min-height:44px" onchange="DATA.roleplay['+i+'].options['+oi+'].feedback=this.value" placeholder="Why this response is good or bad.">'+esc(o.feedback||"")+'</textarea></div>';
+    });
+    h+='<button class="btn ghost s" onclick="addRpOption('+i+')">+ Add response</button></div>';
+  });
+  if(!DATA.roleplay.length)h+='<div class="card muted">No scenarios yet — click "+ Add scenario".</div>';
+  el.innerHTML=h;
 }
+function addScenario(){var c=DATA.roleplay.length?DATA.roleplay[DATA.roleplay.length-1].category:"General";DATA.roleplay.push({id:"rp_"+Date.now(),category:c,client:"",options:[{text:"",score:100,feedback:""},{text:"",score:0,feedback:""}]});renderRoleplay();window.scrollTo(0,document.body.scrollHeight);}
+function delS(i){if(confirm("Delete this scenario?")){DATA.roleplay.splice(i,1);renderRoleplay();}}
+function moveS(i,d){var ni=i+d;if(ni<0||ni>=DATA.roleplay.length)return;var x=DATA.roleplay.splice(i,1)[0];DATA.roleplay.splice(ni,0,x);renderRoleplay();}
+function setBest(i,oi){DATA.roleplay[i].options.forEach(function(o,k){o.score=(k===oi?100:0);});renderRoleplay();}
+function addRpOption(i){DATA.roleplay[i].options.push({text:"",score:0,feedback:""});renderRoleplay();}
+function delRpOption(i,oi){var s=DATA.roleplay[i];if((s.options||[]).length<=2){toast("Keep at least 2 responses");return;}s.options.splice(oi,1);if(!s.options.some(function(o){return +o.score>=100;}))s.options[0].score=100;renderRoleplay();}
+async function saveRoleplay(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"roleplay",value:{scenarios:DATA.roleplay}})});toast(r.ok?"Roleplay published":"Save failed");}
 </script>
 </body>
 </html>
