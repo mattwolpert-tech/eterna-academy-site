@@ -132,10 +132,10 @@ var CARRIERS=["Mutual of Omaha","Foresters","Corebridge","American Amicable","Tr
 async function renderOrientation(){
   var el=document.getElementById("s-orientation");
   el.innerHTML='<h2>Inbound Orientation</h2><p class="muted">Carrier contracts, tool sign-ins, and exam certification per agent.</p><div class="card" id="ormissing"></div><div class="card" id="ortbl">Loading…</div>';
-  var r=await api("/admin"); var d=await r.json(); var agents=(d.agents||[]);
+  var r=await api("/admin"); var d=await r.json(); var agents=(d.agents||[]); window._orientAgents=agents;
   function cell(a,name){var s=((a.orientation||{}).items||{})[name];if(!s)return '<td class="muted">—</td>';if(s.status==="uploaded")return '<td><a href="#" class="ok" onclick="viewUpload(\''+esc(a.email)+'\',\''+esc(s.slug||"")+'\',\''+esc(name)+'\');return false">✓ view</a></td>';return '<td class="err">✗ none</td>';}
-  var head='<tr><th>Agent</th>'+CARRIERS.map(function(c){return '<th title="'+c+'">'+c.split(" ").map(function(w){return w[0]}).join("")+'</th>'}).join("")+'<th>Toolkits</th><th>Dialpad</th><th>Exam (80%)</th></tr>';
-  var rows=agents.map(function(a){var o=a.orientation||{};var exam=o.exam?(o.exam.passed?'<span class="ok">✓ '+o.exam.score+'%</span>':'<span class="err">'+o.exam.score+'%</span>'):'<span class="muted">—</span>';return '<tr><td>'+esc(a.name)+'<div class="muted">'+esc(a.email)+'</div></td>'+CARRIERS.map(function(c){return cell(a,c)}).join("")+cell(a,"Insurance Toolkits")+cell(a,"Dialpad")+'<td>'+exam+'</td></tr>';}).join("");
+  var head='<tr><th>Agent</th>'+CARRIERS.map(function(c){return '<th title="'+c+'">'+c.split(" ").map(function(w){return w[0]}).join("")+'</th>'}).join("")+'<th>Toolkits</th><th>Dialpad</th><th>Exam (80%)</th><th>Expectations signed</th></tr>';
+  var rows=agents.map(function(a){var o=a.orientation||{};var exam=o.exam?(o.exam.passed?'<span class="ok">✓ '+o.exam.score+'%</span>':'<span class="err">'+o.exam.score+'%</span>'):'<span class="muted">—</span>';var ack=(o.ack&&o.ack.agreed)?'<a href="#" class="ok" onclick="viewAck(\''+esc(a.email)+'\');return false">✓ '+esc(o.ack.date||"signed")+'</a>':'<span class="err">✗ none</span>';return '<tr><td>'+esc(a.name)+'<div class="muted">'+esc(a.email)+'</div></td>'+CARRIERS.map(function(c){return cell(a,c)}).join("")+cell(a,"Insurance Toolkits")+cell(a,"Dialpad")+'<td>'+exam+'</td><td>'+ack+'</td></tr>';}).join("");
   document.getElementById("ortbl").innerHTML=agents.length?'<table><thead>'+head+'</thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No agents have started orientation yet.</p>';
   var missing={};agents.forEach(function(a){var items=(a.orientation||{}).items||{};CARRIERS.forEach(function(c){if(items[c]&&items[c].status==="dont_have"){(missing[c]=missing[c]||[]).push(a.name);}});});
   var mk=Object.keys(missing);
@@ -147,6 +147,27 @@ async function viewUpload(email,slug,name){
   if(!dataURL){toast("No image found");return;}
   var w=window.open("","_blank");
   if(w)w.document.write('<title>'+esc(name)+' — '+esc(email)+'</title><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="'+dataURL+'" style="max-width:100%;max-height:100vh"></body>');
+}
+function viewAck(email){
+  var a=(window._orientAgents||[]).find(function(x){return x.email===email;});
+  if(!a||!a.orientation||!a.orientation.ack||!a.orientation.ack.agreed){toast("No signature on file");return;}
+  var k=a.orientation.ack;var w=window.open("","_blank");if(!w)return;
+  w.document.write('<!doctype html><meta charset="utf-8"><title>Acknowledgment — '+esc(a.name)+'</title>'
+    +'<style>body{font-family:DM Sans,Segoe UI,sans-serif;color:#22302c;max-width:720px;margin:40px auto;padding:0 26px;line-height:1.6}'
+    +'h1{font-family:Playfair Display,Georgia,serif;color:#1a3c34;margin:0}h2{font-family:Playfair Display,Georgia,serif;color:#2d6a56}'
+    +'.rule{height:3px;width:64px;background:#f5c842;margin:8px 0 20px}'
+    +'.box{border:1px solid #e2dccd;background:#f6f3ec;border-radius:10px;padding:16px 20px;margin:18px 0}'
+    +'.sig{font-family:Playfair Display,Georgia,serif;font-size:30px;color:#1a3c34;border-bottom:2px solid #1a3c34;display:inline-block;padding:0 26px 4px;margin-top:6px}'
+    +'.meta{color:#5a6672;font-size:13px}'
+    +'.btn{background:#1a3c34;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:14px;cursor:pointer}@media print{.btn{display:none}}</style>'
+    +'<h1>ETERNA</h1><div class="rule"></div><h2>Inbound Program — Expectations Acknowledgment</h2>'
+    +'<div class="box">I, <b>'+esc(k.name)+'</b>, confirm that I have read and understand the Eterna Inbound Program expectations — including the performance standards, daily presence in the &ldquo;inbound&rdquo; Discord (camera on, off mute), the call-allocation and accountability terms, and the professionalism &amp; compliance standards — and I agree to abide by them.</div>'
+    +'<p class="meta">Agent: '+esc(a.name)+' &middot; '+esc(a.email)+(a.upline?' &middot; Upline: '+esc(a.upline):'')+(a.program?' &middot; '+esc(a.program):'')+'</p>'
+    +'<p style="margin-top:30px;margin-bottom:0">Signature</p><div class="sig">'+esc(k.name)+'</div>'
+    +'<p class="meta" style="margin-top:14px">Date signed: <b>'+esc(k.date||"")+'</b>'+(k.ts?' &middot; Recorded '+new Date(k.ts).toLocaleString():'')+'</p>'
+    +'<p style="margin-top:26px"><button class="btn" onclick="window.print()">Print / Save as PDF</button></p>'
+    +'<p class="meta" style="margin-top:34px;border-top:1px solid #ddd;padding-top:8px">Confidential — Eterna Insurance Solutions.</p>');
+  w.document.close();
 }
 
 // ---------- CURRICULUM ----------

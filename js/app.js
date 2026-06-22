@@ -262,6 +262,32 @@
     state.orientation.items = state.orientation.items || {}; state.orientation.items[name] = { status: "dont_have" };
     save(); toast("Flagged for your manager · " + name); lesson_upload(lessonById[lid]); checkBadges(); header();
   };
+  function lesson_sign(l) {
+    var ack = state.orientation.ack, ex = document.getElementById("lextra");
+    if (ack && ack.agreed) {
+      if (!state.completed[l.id]) completeLesson(l);
+      ex.innerHTML = '<div class="card" style="border:1px solid var(--green2)"><div class="fb good" style="display:block;margin-bottom:8px"><b><i class="ti ti-writing-sign" style="vertical-align:-2px"></i> Acknowledgment signed.</b> This is on file with your manager.</div>'
+        + '<p class="sub" style="margin:0 0 2px">Signed by</p><div style="font-family:\'Playfair Display\',serif;font-size:24px;color:var(--green)">' + escp(ack.name) + '</div>'
+        + '<p class="sub" style="margin:6px 0 0">Date: ' + escp(ack.date) + '</p></div>' + nextBtn(l);
+      return;
+    }
+    ex.innerHTML = '<div class="card"><h2 style="margin-top:0">Acknowledgment &amp; signature</h2>'
+      + '<label style="display:flex;gap:9px;align-items:flex-start;margin-bottom:14px;cursor:pointer"><input type="checkbox" id="ackchk" onchange="eaAckChk()" style="margin-top:4px;width:18px;height:18px"> <span>I have read and understand the Inbound Program expectations above, and I agree to abide by them.</span></label>'
+      + '<label class="sub">Type your full name to sign</label><br><input id="ackname" value="' + escp((state.identity && state.identity.name) || "") + '" oninput="eaAckChk()" placeholder="Your full name" style="width:100%;max-width:380px;padding:11px;border:1px solid var(--line);border-radius:8px;margin:5px 0 14px;font-size:19px;font-family:\'Playfair Display\',serif">'
+      + '<br><label class="sub">Date</label><br><input id="ackdate" value="' + escp(new Date().toLocaleDateString()) + '" style="width:180px;padding:10px;border:1px solid var(--line);border-radius:8px;margin:5px 0 16px"><br>'
+      + '<button class="btn" id="ackbtn" disabled onclick="eaSign(\'' + l.id + '\')">Sign &amp; submit · +' + (l.xp || 0) + ' XP</button></div>';
+  }
+  window.eaAckChk = function () {
+    var c = document.getElementById("ackchk"), n = document.getElementById("ackname"), b = document.getElementById("ackbtn");
+    if (c && n && b) b.disabled = !(c.checked && n.value.trim().length > 1);
+  };
+  window.eaSign = function (lid) {
+    var name = (document.getElementById("ackname").value || "").trim();
+    var date = (document.getElementById("ackdate").value || "").trim() || new Date().toLocaleDateString();
+    if (!document.getElementById("ackchk").checked || !name) return;
+    state.orientation.ack = { name: name, date: date, agreed: true, ts: Date.now(), email: (state.identity && state.identity.email) || "" };
+    save(); checkBadges(); header(); completeLesson(lessonById[lid]); toast("Signed — thank you"); lesson(lid);
+  };
 
   function lesson_exam(l) {
     var qs = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean);
@@ -362,6 +388,7 @@
     if (l.type === "doc") loadDoc(l.doc).then(function (txt) { document.getElementById("docbody").innerHTML = renderDocText(txt); }).catch(function () { document.getElementById("docbody").innerHTML = '<p class="fb bad" style="display:block">Could not load this document. Try re-entering your password.</p>'; });
     if (l.type === "exam") { lesson_exam(l); return; }
     if (l.type === "upload") { lesson_upload(l); return; }
+    if (l.type === "sign") { lesson_sign(l); return; }
     if (l.type === "roleplay") { renderRoleplay(l); return; }
     var quizzes = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean);
     if (quizzes.length) { renderQuizSet(l, quizzes); return; }
