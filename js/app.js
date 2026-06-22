@@ -156,6 +156,7 @@
       if (/^### /.test(ln)) { out.push("<h3>" + inline(ln.slice(4)) + "</h3>"); i++; continue; }
       if (/^## /.test(ln)) { out.push("<h2>" + inline(ln.slice(3)) + "</h2>"); i++; continue; }
       if (/^# /.test(ln)) { out.push("<h2>" + inline(ln.slice(2)) + "</h2>"); i++; continue; }
+      if (/^\s*!\[[^\]]*\]\([^)]+\)\s*$/.test(ln)) { var im = ln.match(/!\[([^\]]*)\]\(([^)]+)\)/); out.push('<img src="' + im[2] + '" alt="' + escp(im[1]) + '" style="display:block;max-width:100%;margin:10px 0;border-radius:12px;border:1px solid var(--line,#e4ddcf)">'); i++; continue; }
       if (/^\s*\|.*\|/.test(ln)) {
         var rows = []; while (i < lines.length && /^\s*\|.*\|/.test(lines[i])) { rows.push(lines[i]); i++; }
         var cells = rows.map(function (r) { return r.trim().replace(/^\||\|$/g, "").split("|").map(function (c) { return c.trim(); }); });
