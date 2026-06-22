@@ -23,9 +23,9 @@
     <rect x="40" y="140" width="270" height="28" class="pine"/>
     <text x="175" y="146" text-anchor="middle" class="h wht b" font-size="15">Daily Office Check-in</text>
     <circle cx="64" cy="138" r="3" class="gold"/>
-    <text x="60" y="200" class="ink xs b">Your work email</text>
+    <text x="60" y="200" class="ink xs b">Your Dialpad email</text>
     <rect x="60" y="208" width="230" height="34" rx="8" class="line"/>
-    <text x="72" y="230" class="mut s">you@goeterna.com</text>
+    <text x="72" y="230" class="mut s">your Dialpad email</text>
     <text x="60" y="266" class="ink xs b">Your check-in password</text>
     <rect x="60" y="274" width="230" height="34" rx="8" class="line"/>
     <text x="72" y="296" class="mut s">&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;</text>
