@@ -148,7 +148,7 @@
     if (/^[A-Za-z0-9_-]{11}$/.test(v)) return "https://www.youtube.com/embed/" + v;
     return "https://drive.google.com/file/d/" + v + "/preview";
   }
-  function inline(s) { return escp(s).replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
+  function inline(s) { return escp(s).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--green2);font-weight:600">$1</a>').replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
   function md(src) {
     var lines = (src || "").split("\n"), out = [], i = 0;
     while (i < lines.length) {
