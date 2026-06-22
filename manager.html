@@ -128,11 +128,19 @@ async function renderAgents(){
     var total=tot[x.track]||0,pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0;
     var bar='<div style="height:5px;background:#e7e2d6;border-radius:3px;width:84px;margin-top:3px"><div style="height:5px;background:#2d6a56;border-radius:3px;width:'+pct+'%"></div></div>';
     var pcell='<td><b>'+pct+'%</b>'+bar+'<div class="muted" style="font-size:11px">'+(x.lessons||0)+(total?' / '+total:'')+' pages</div></td>';
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td>'+pcell+'<td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td></tr>';
+    return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td>'+pcell+'<td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td><td><button class="btn ghost s" onclick="resetPw(\''+esc(x.email)+'\')">Reset pw</button></td></tr>';
   }).join("");
-  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th></tr></thead><tbody>'+rows+'</tbody></table>';
+  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
 }
 
+async function resetPw(email){
+  var np=prompt("Set a new temporary password for "+email+".\nGive it to the agent — they can sign in with it, then change it themselves via “Forgot password”.");
+  if(np===null)return; np=(np||"").trim();
+  if(np.length<4){toast("Password must be at least 4 characters");return;}
+  var r=await api("/reset",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,password:np})});
+  var d=await r.json().catch(function(){return{};});
+  if(r.ok&&d.ok)toast("Password reset for "+email); else toast(d.error||"Reset failed");
+}
 // ---------- ORIENTATION ----------
 var CARRIERS=["Mutual of Omaha","Foresters","Corebridge","American Amicable","Transamerica","Ethos","Fidelity"];
 async function renderOrientation(){

@@ -31,10 +31,33 @@
       '<input id="lg_email" type="email" placeholder="Email" autocomplete="username" autofocus>' +
       '<input id="lg_pw" type="password" placeholder="Password" autocomplete="current-password">' +
       '<button type="submit">Sign in</button>' +
-      '<div class="alt">New agent? <a href="#" id="toReg">Create your profile</a></div></form>';
+      '<div class="alt"><a href="#" id="toForgot">Forgot password?</a> &nbsp;·&nbsp; New agent? <a href="#" id="toReg">Create your profile</a></div></form>';
     if (msg) err(msg);
     document.getElementById("loginForm").addEventListener("submit", function (e) { e.preventDefault(); doLogin(); });
     document.getElementById("toReg").addEventListener("click", function (e) { e.preventDefault(); showRegister(); });
+    document.getElementById("toForgot").addEventListener("click", function (e) { e.preventDefault(); showForgot(); });
+  }
+
+  function showForgot(msg) {
+    gate.innerHTML = '<form class="box" id="fgForm">' + head() +
+      '<p>Reset your password</p>' +
+      '<div class="gerr" id="gerr"></div>' +
+      '<input id="fg_email" type="email" placeholder="Your email" autocomplete="username" autofocus>' +
+      '<input id="fg_verify" placeholder="Phone number OR full name you registered with">' +
+      '<input id="fg_pw" type="password" placeholder="Choose a new password" autocomplete="new-password">' +
+      '<button type="submit">Reset password &amp; sign in</button>' +
+      '<div class="alt">Remembered it? <a href="#" id="toLogin2">Back to sign in</a><br><span style="font-size:12px;color:rgba(255,255,255,.55)">Can\'t verify? Ask your manager to reset it for you.</span></div></form>';
+    if (msg) err(msg);
+    document.getElementById("fgForm").addEventListener("submit", function (e) { e.preventDefault(); doReset(); });
+    document.getElementById("toLogin2").addEventListener("click", function (e) { e.preventDefault(); showLogin(); });
+  }
+  function doReset() {
+    var email = val("fg_email").toLowerCase(), verify = val("fg_verify"), pw = document.getElementById("fg_pw").value;
+    if (!email || !verify || !pw) return err("Enter your email, your phone or name to verify, and a new password.");
+    fetch(API + "/reset", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, verify: verify, password: pw }) })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (x) { if (x.ok && x.d.ok) launch(x.d.profile, x.d.contentKey); else err(x.d.error || "Could not reset password."); })
+      .catch(function () { err("Network error. Try again."); });
   }
 
   function showRegister(msg) {
