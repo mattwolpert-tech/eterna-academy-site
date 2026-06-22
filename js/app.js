@@ -368,6 +368,7 @@
       var done = moduleComplete(m), prog = moduleProgress(m), c = done ? "var(--lime)" : (prog > 0 ? "var(--info)" : "var(--txt2)");
       var les = m.lessons.map(function (l) {
         var lc = lessonComplete(l);
+        if (!lc && !lessonUnlocked(l)) return '<div class="les" style="opacity:.5;cursor:not-allowed" onclick="eaLocked()"><span class="ticon"><i class="ti ti-lock"></i></span><span class="lt">' + escp(lessonTitle(l)) + '</span><span class="typetag">' + l.type + '</span><span class="lx">+' + (l.xp || 0) + '</span></div>';
         var icon = lc ? "ti-circle-check" : (l.type === "video" ? "ti-player-play" : l.type === "quiz" ? "ti-help-circle" : l.type === "roleplay" ? "ti-microphone-2" : l.type === "doc" ? "ti-file-text" : l.type === "library" ? "ti-player-play" : "ti-book");
         return '<div class="les' + (lc ? ' done' : '') + '" onclick="eaGo(\'lesson\',\'' + l.id + '\')"><span class="ticon"><i class="ti ' + icon + '"></i></span><span class="lt">' + escp(lessonTitle(l)) + '</span><span class="typetag">' + l.type + '</span><span class="lx">+' + (l.xp || 0) + '</span></div>';
       }).join("");
@@ -377,6 +378,7 @@
 
   function lesson(id) {
     var l = lessonById[id]; if (!l) return go("curriculum");
+    if (!lessonComplete(l) && !lessonUnlocked(l)) { view.innerHTML = '<button class="back" onclick="eaGo(\'curriculum\')"><i class="ti ti-arrow-left"></i> Curriculum</button><div class="card" style="text-align:center;padding:34px"><i class="ti ti-lock" style="font-size:34px;color:var(--txt2)"></i><h2 style="margin:10px 0 4px">This page is locked</h2><p class="sub">Finish and sign off the previous page to unlock it.</p><button class="btn" onclick="eaGo(\'curriculum\')">Back to curriculum</button></div>'; return; }
     var m = lessonModule[id];
     var h = '<button class="back" onclick="eaGo(\'curriculum\')"><i class="ti ti-arrow-left"></i> ' + escp(m.title) + '</button><h1>' + escp(lessonTitle(l)) + '</h1><p class="sub"><span class="typetag">' + l.type + '</span> &nbsp;+' + (l.xp || 0) + ' XP</p>';
     if (l.type === "library") { view.innerHTML = h + '<div id="lib"></div>'; videolib(curTrack().id, "lib"); return; }
@@ -392,14 +394,18 @@
     if (l.type === "roleplay") { renderRoleplay(l); return; }
     var quizzes = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean);
     if (quizzes.length) { renderQuizSet(l, quizzes); return; }
-    document.getElementById("lextra").innerHTML = '<div style="margin-top:18px">' + (state.completed[l.id] ? '<span class="badge b-good"><i class="ti ti-check" style="vertical-align:-2px"></i> Completed</span> ' : '<button class="btn" onclick="eaMark(\'' + l.id + '\')">Mark complete · +' + (l.xp || 0) + ' XP</button>') + nextBtn(l) + '</div>';
+    var _done = state.completed[l.id];
+    document.getElementById("lextra").innerHTML = '<div style="margin-top:18px">' + (_done ? '<span class="badge b-good"><i class="ti ti-check" style="vertical-align:-2px"></i> Signed off</span> ' : '<button class="btn" onclick="eaMark(\'' + l.id + '\')"><i class="ti ti-writing-sign" style="vertical-align:-2px"></i> Sign off &amp; complete · +' + (l.xp || 0) + ' XP</button>') + nextBtn(l) + '</div>' + (_done ? '' : '<p class="sub" style="margin-top:8px">Sign off to earn your points and unlock the next page.</p>');
   }
   window.eaMark = function (id) { completeLesson(lessonById[id]); render(); };
+  function flatLessons() { var f = []; curTrack().modules.forEach(function (m) { m.lessons.forEach(function (x) { f.push(x); }); }); return f; }
+  function lessonUnlocked(l) { var f = flatLessons(); var i = f.findIndex(function (x) { return x.id === l.id; }); if (i <= 0) return true; return !!state.completed[f[i - 1].id]; }
+  window.eaLocked = function () { toast("Finish and sign off the previous page to unlock this one."); };
   function nextBtn(l) {
-    var flat = []; curTrack().modules.forEach(function (m) { m.lessons.forEach(function (x) { flat.push(x); }); });
-    var idx = flat.findIndex(function (x) { return x.id === l.id; });
-    if (idx >= 0 && idx < flat.length - 1) return ' <button class="btn ghost" onclick="eaGo(\'lesson\',\'' + flat[idx + 1].id + '\')">Next <i class="ti ti-arrow-right" style="vertical-align:-2px"></i></button>';
-    return "";
+    if (!state.completed[l.id]) return "";
+    var flat = flatLessons(); var idx = flat.findIndex(function (x) { return x.id === l.id; });
+    if (idx >= 0 && idx < flat.length - 1) return ' <button class="btn" onclick="eaGo(\'lesson\',\'' + flat[idx + 1].id + '\')">Next page <i class="ti ti-arrow-right" style="vertical-align:-2px"></i></button>';
+    return ' <button class="btn ghost" onclick="eaGo(\'curriculum\')">Back to curriculum</button>';
   }
 
   function renderQuizSet(l, quizzes) {
