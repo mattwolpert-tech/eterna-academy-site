@@ -13,6 +13,15 @@
       m.lessons.forEach(function (l) { lessonById[l.id] = l; lessonModule[l.id] = m; lessonTrack[l.id] = t; });
     });
   });
+  // Randomize answer order so the correct choice isn't positionally predictable.
+  function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var k = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[k]; a[k] = t; } return a; }
+  RP.forEach(function (s) { if (s.options && s.options.length > 1) shuffle(s.options); });
+  QZ.forEach(function (q) {
+    if (!q.options || q.options.length < 2 || typeof q.answer !== "number") return;
+    var correct = q.options[q.answer], order = shuffle(q.options.map(function (o, i) { return i; }));
+    q.options = order.map(function (i) { return q.options[i]; });
+    q.answer = q.options.indexOf(correct);
+  });
   var qById = {}; QZ.forEach(function (q) { qById[q.id] = q; });
   var rpById = {}; RP.forEach(function (s) { rpById[s.id] = s; });
 
