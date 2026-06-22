@@ -33,11 +33,11 @@
     return { track: null, identity: null, orientation: {}, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, streak: 1, lastActive: today() };
   }
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); scheduleSync(); }
-  var syncT;
+  var syncT, hydrated = false;
   function emailKey() { return state.identity && state.identity.email; }
   function scheduleSync() { if (!emailKey()) return; clearTimeout(syncT); syncT = setTimeout(syncUp, 1200); }
   function syncUp() {
-    if (!emailKey() || !window.EA_API) return;
+    if (!hydrated || !emailKey() || !window.EA_API) return;
     var li = levelInfo();
     var payload = {
       pw: sessionStorage.getItem("ea_pw"), email: state.identity.email, name: state.identity.name,
@@ -58,6 +58,7 @@
       if (d && d.data) {
         ["completed", "quiz", "rp", "badges"].forEach(function (k) { if (d.data[k]) Object.keys(d.data[k]).forEach(function (id) { if (state[k][id] === undefined) state[k][id] = d.data[k][id]; }); });
         if (d.data.orientation && Object.keys(d.data.orientation).length) state.orientation = Object.assign(state.orientation || {}, d.data.orientation);
+        if (d.track && !state.track) state.track = d.track;
         localStorage.setItem(KEY, JSON.stringify(state));
       }
     } catch (e) {}
@@ -229,7 +230,7 @@
     var e = (document.getElementById("id_email").value || "").trim().toLowerCase();
     if (!n || e.indexOf("@") < 1) { var er = document.getElementById("id_err"); er.style.display = "block"; er.textContent = "Enter your name and a valid work email."; return; }
     state.identity = { name: n, email: e }; save();
-    syncDown().then(function () { render(); });
+    syncDown().then(function () { hydrated = true; render(); });
   };
 
   function uploadItems(l) { var a = []; (l.carriers || []).forEach(function (c) { a.push({ name: c, kind: "carrier" }); }); (l.proof || []).forEach(function (x) { a.push({ name: x, kind: "proof" }); }); return a; }
@@ -501,5 +502,6 @@
   }
   function groupBy(arr, key) { var m = {}, o = []; arr.forEach(function (x) { var k = x[key] || "Other"; if (!m[k]) { m[k] = []; o.push(k); } m[k].push(x); }); return o.map(function (k) { return { key: k, items: m[k] }; }); }
 
-  checkBadges(); render();
+  if (state.identity) { syncDown().then(function () { hydrated = true; checkBadges(); render(); }); }
+  else { hydrated = true; checkBadges(); render(); }
 })();
