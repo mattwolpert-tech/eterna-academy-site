@@ -215,7 +215,7 @@ function renderCurriculum(){
       h+='<div class="mod'+(coll?" collapsed":"")+'"><div class="modh"><button class="btn ghost s" style="border:none;padding:1px 6px;font-size:14px" title="Collapse" onclick="toggleMod(\''+ck+'\')">'+(coll?"▸":"▾")+'</button><i class="ti '+esc(m.icon||"ti-folder")+'"></i><input value="'+esc(m.title)+'" onchange="setMod('+ti+','+mi+',\'title\',this.value)" style="flex:1;font-weight:600"><span class="muted" style="font-size:11px">'+m.lessons.length+'</span><button class="btn ghost s" title="Module icon" onclick="pickIcon('+ti+','+mi+')">icon</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',-1)">↑</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',1)">↓</button><button class="btn danger s" onclick="delMod('+ti+','+mi+')">Delete</button></div>';
       m.lessons.forEach(function(l,li){
         var label=l.title||(l.doc?(DATA.docs[l.doc]&&DATA.docs[l.doc].t)||l.doc:l.id);
-        h+='<div class="les"><span class="pill">'+esc(l.type)+'</span><span class="lt" style="flex:1;cursor:pointer" onclick="editLesson('+ti+','+mi+','+li+')">'+esc(label)+'</span><span class="muted" style="font-size:11px">'+(l.xp||0)+' xp</span><button class="btn ghost s" onclick="editLesson('+ti+','+mi+','+li+')">Edit</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',-1)">↑</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',1)">↓</button><button class="btn danger s" onclick="delLes('+ti+','+mi+','+li+')">✕</button></div>';
+        h+='<div class="les"><span class="pill">'+esc(l.type)+'</span><span class="lt" style="flex:1;cursor:pointer" onclick="editLesson('+ti+','+mi+','+li+')">'+esc(label)+'</span><span class="muted" style="font-size:11px">'+(l.xp||0)+' xp</span><button class="btn ghost s" onclick="editLesson('+ti+','+mi+','+li+')">Edit</button><button class="btn ghost s" onclick="lessonCopyUI('+ti+','+mi+','+li+')" title="Copy or move to another track/module">Copy/Move</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',-1)">↑</button><button class="btn ghost s" onclick="moveLes('+ti+','+mi+','+li+',1)">↓</button><button class="btn danger s" onclick="delLes('+ti+','+mi+','+li+')">✕</button></div>';
       });
       h+='<div class="les"><button class="btn ghost s" onclick="addLes('+ti+','+mi+')">+ Add lesson</button></div></div>';
     });
@@ -347,6 +347,33 @@ async function saveLesson(){
   else if(t==="roleplay"){l.roleplay=[].slice.call(document.querySelectorAll("#le_rppick input:checked")).map(function(c){return c.value;});}
   await saveStructure(true);
   closeEdit();renderCurriculum();toast("Lesson saved & published");
+}
+function lessonCopyUI(ti,mi,li){
+  var l=DATA.tracks[ti].modules[mi].lessons[li];
+  var box=document.getElementById("lessonEdit");
+  var trackOpts=DATA.tracks.map(function(t,i){return '<option value="'+i+'"'+(i===ti?' selected':'')+'>'+esc(t.title)+'</option>';}).join("");
+  box.innerHTML='<div class="card" style="border:2px solid var(--green2)"><div class="row" style="justify-content:space-between"><h3 style="margin:0">Copy or move: '+esc(l.title||l.id)+'</h3><button class="btn ghost s" onclick="closeEdit()">Close</button></div>'
+    +'<p class="muted">Pick where it should go. <b>Copy</b> makes an independent duplicate (the original stays). <b>Move</b> relocates it and keeps the agents\' progress.</p>'
+    +'<label>Destination track</label><select id="cp_track" onchange="cpMods()">'+trackOpts+'</select>'
+    +'<label>Destination module</label><select id="cp_mod"></select>'
+    +'<div class="row" style="margin-top:12px"><button class="btn" onclick="doCopy('+ti+','+mi+','+li+',false)">Copy here</button><button class="btn ghost" onclick="doCopy('+ti+','+mi+','+li+',true)">Move here</button></div></div>';
+  cpMods();document.getElementById("cp_track").value=ti;cpMods();
+  box.scrollIntoView({behavior:"smooth"});
+}
+function cpMods(){var s=document.getElementById("cp_track");if(!s)return;var ti=+s.value;document.getElementById("cp_mod").innerHTML=DATA.tracks[ti].modules.map(function(m,i){return '<option value="'+i+'">'+esc(m.title)+'</option>';}).join("");}
+async function doCopy(ti,mi,li,move){
+  var dt=+document.getElementById("cp_track").value,dm=+document.getElementById("cp_mod").value;
+  var src=DATA.tracks[ti].modules[mi].lessons[li];
+  if(move){
+    DATA.tracks[ti].modules[mi].lessons.splice(li,1);
+    DATA.tracks[dt].modules[dm].lessons.push(src);
+  }else{
+    var copy=JSON.parse(JSON.stringify(src));
+    copy.id=(src.type||"l")+"_"+Date.now()+Math.floor(Math.random()*1000);
+    DATA.tracks[dt].modules[dm].lessons.push(copy);
+  }
+  await saveStructure(true);
+  closeEdit();renderCurriculum();toast(move?"Lesson moved & published":"Lesson copied & published");
 }
 async function saveStructure(quiet){
   var r=await api("/save",{method:"POST",body:JSON.stringify({what:"structure",value:{levels:DATA.levels,tracks:DATA.tracks}})});
