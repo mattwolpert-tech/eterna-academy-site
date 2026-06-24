@@ -299,33 +299,52 @@ function mdPreview(){var ta=document.getElementById("le_body"),pv=document.getEl
 function uploadImage(){
   var ta=document.getElementById("le_body");
   if(!ta){toast("Open a Reading or Document lesson first — images go inside the lesson content.");return;}
-  var inp=document.createElement("input");inp.type="file";inp.accept="image/png,image/jpeg,image/jpg,image/gif,image/webp";
+  var inp=document.createElement("input");inp.type="file";inp.accept="image/*,.heic,.heif";
   inp.onchange=function(){
-    var f=inp.files[0];if(!f)return;toast("Adding image…");
-    var rd=new FileReader();
-    rd.onerror=function(){toast("Couldn't read that file. Try a different image.");};
-    rd.onload=function(){
-      var img=new Image();
-      img.onload=function(){
-        var max=1000,w=img.width,hh=img.height;
-        if(!w||!hh){toast("That image didn't load. Use a JPG or PNG.");return;}
-        if(w>max){hh=Math.round(hh*max/w);w=max;}
-        var cv=document.createElement("canvas");cv.width=w;cv.height=hh;
-        cv.getContext("2d").drawImage(img,0,0,w,hh);
-        var q=0.72,url=cv.toDataURL("image/jpeg",q);
-        while(url.length>700000&&q>0.4){q-=0.1;url=cv.toDataURL("image/jpeg",q);}
-        var cap=(f.name||"image").replace(/\.[^.]+$/,"").slice(0,60);
-        var ins="\n!["+cap+"]("+url+")\n";
-        var s=(ta.selectionStart!=null)?ta.selectionStart:ta.value.length;
-        ta.value=ta.value.slice(0,s)+ins+ta.value.slice(s);
-        mdPreview();toast("Image added ("+Math.round(url.length/1024)+" KB) — now click Save lesson, then Save & publish.");
-      };
-      img.onerror=function(){toast("Couldn't read that image. Use a JPG or PNG — iPhone HEIC photos won't work (take a screenshot or export as JPG).");};
-      img.src=rd.result;
-    };
-    rd.readAsDataURL(f);
+    var f=inp.files[0];if(!f)return;
+    var isHeic=/\.(heic|heif)$/i.test(f.name||"")||/heic|heif/i.test(f.type||"");
+    if(isHeic){
+      toast("Converting iPhone photo…");
+      ensureHeic(function(){
+        window.heic2any({blob:f,toType:"image/jpeg",quality:0.85}).then(function(b){embedImageBlob(ta,b,f.name);})
+        .catch(function(){toast("Couldn't convert that photo. Take a screenshot of it and upload the screenshot instead.");});
+      });
+    } else embedImageBlob(ta,f,f.name);
   };
   inp.click();
+}
+function ensureHeic(cb){
+  if(window.heic2any)return cb();
+  var s=document.createElement("script");
+  s.src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+  s.onload=cb;
+  s.onerror=function(){toast("Couldn't load the photo converter. Upload a JPG/PNG or a screenshot.");};
+  document.head.appendChild(s);
+}
+function embedImageBlob(ta,blob,name){
+  toast("Adding image…");
+  var rd=new FileReader();
+  rd.onerror=function(){toast("Couldn't read that file. Try a different image.");};
+  rd.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var max=1000,w=img.width,hh=img.height;
+      if(!w||!hh){toast("That image didn't load. Try a JPG, PNG, or screenshot.");return;}
+      if(w>max){hh=Math.round(hh*max/w);w=max;}
+      var cv=document.createElement("canvas");cv.width=w;cv.height=hh;
+      cv.getContext("2d").drawImage(img,0,0,w,hh);
+      var q=0.72,url=cv.toDataURL("image/jpeg",q);
+      while(url.length>700000&&q>0.4){q-=0.1;url=cv.toDataURL("image/jpeg",q);}
+      var cap=(name||"image").replace(/\.[^.]+$/,"").slice(0,60);
+      var ins="\n!["+cap+"]("+url+")\n";
+      var s=(ta.selectionStart!=null)?ta.selectionStart:ta.value.length;
+      ta.value=ta.value.slice(0,s)+ins+ta.value.slice(s);
+      mdPreview();toast("Image added ("+Math.round(url.length/1024)+" KB) — now click Save lesson, then Save & publish.");
+    };
+    img.onerror=function(){toast("Couldn't read that image. Try a JPG, PNG, or a screenshot.");};
+    img.src=rd.result;
+  };
+  rd.readAsDataURL(blob);
 }
 function mdRender(src){var lines=(src||"").split("\n"),out=[],i=0;function inl(s){return esc(s).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");}
   while(i<lines.length){var ln=lines[i];
