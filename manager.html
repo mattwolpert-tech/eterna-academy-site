@@ -270,6 +270,7 @@ function leTypeDefs(){
       +'<button onclick="mdIns(\'\\n![\',\'](/assets/image.png)\',\'caption\')">&#128247; Image</button>'
       +'<button onclick="insTable()">&#9638; Table</button>'
       +'<button onclick="uploadImage()" title="Upload a photo or screenshot">&#128247; Upload image</button>'
+      +'<button onclick="uploadPdf()" title="Upload a PDF document">&#128196; Upload PDF</button>'
       +'</div>'
       +'<textarea id="le_body" style="min-height:200px" oninput="mdPreview()" placeholder="Write the lesson here. Highlight text and click a button to format it.">'+esc(l._body||l.body||"")+'</textarea>'
       +'<label>Live preview — exactly what agents see</label><div class="preview" id="le_preview"></div>';
@@ -346,11 +347,36 @@ function embedImageBlob(ta,blob,name){
   };
   rd.readAsDataURL(blob);
 }
+function uploadPdf(){
+  var ta=document.getElementById("le_body");
+  if(!ta){toast("Open a Reading or Document lesson first — the PDF goes inside the lesson content.");return;}
+  var inp=document.createElement("input");inp.type="file";inp.accept="application/pdf,.pdf";
+  inp.onchange=function(){
+    var f=inp.files[0];if(!f)return;
+    if(f.size>14000000){toast("That PDF is "+Math.round(f.size/1048576)+"MB — max ~14MB. Compress it (smallpdf.com) and try again.");return;}
+    toast("Uploading PDF…");
+    var rd=new FileReader();
+    rd.onerror=function(){toast("Couldn't read that file.");};
+    rd.onload=function(){
+      api("/file",{method:"POST",body:JSON.stringify({dataURL:rd.result})}).then(function(r){return r.json();}).then(function(d){
+        if(!d||!d.url){toast("Upload failed: "+((d&&d.error)||"unknown")); return;}
+        var name=(f.name||"document.pdf").slice(0,80);
+        var ins="\n@pdf("+d.url+")\n\n[📄 Open "+name+"]("+d.url+")\n";
+        var s=(ta.selectionStart!=null)?ta.selectionStart:ta.value.length;
+        ta.value=ta.value.slice(0,s)+ins+ta.value.slice(s);
+        mdPreview();toast("PDF added — now click Save lesson, then Save & publish.");
+      }).catch(function(){toast("Upload failed. Check your connection and try again.");});
+    };
+    rd.readAsDataURL(f);
+  };
+  inp.click();
+}
 function mdRender(src){var lines=(src||"").split("\n"),out=[],i=0;function inl(s){return esc(s).replace(/\[([^\]]+)\]\(([^)\s]+)\)/g,'<a href="$2" target="_blank">$1</a>').replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>").replace(/`([^`]+)`/g,"<code>$1</code>");}
   while(i<lines.length){var ln=lines[i];
     if(/^### /.test(ln)){out.push("<h3>"+inl(ln.slice(4))+"</h3>");i++;continue;}
     if(/^## /.test(ln)){out.push("<h2>"+inl(ln.slice(3))+"</h2>");i++;continue;}
     if(/^# /.test(ln)){out.push("<h2>"+inl(ln.slice(2))+"</h2>");i++;continue;}
+    if(/^\s*@pdf\((.+)\)\s*$/.test(ln)){var pm=ln.match(/@pdf\((.+)\)/);out.push('<iframe src="'+esc(pm[1])+'" style="width:100%;height:70vh;border:1px solid #ddd;border-radius:8px" title="PDF document"></iframe>');i++;continue;}
     if(/^\s*!\[[^\]]*\]\([^)]+\)\s*$/.test(ln)){var im=ln.match(/!\[([^\]]*)\]\(([^)]+)\)/);out.push('<img src="'+im[2]+'" alt="'+esc(im[1])+'">');i++;continue;}
     if(/^\s*\|.*\|/.test(ln)){var rows=[];while(i<lines.length&&/^\s*\|.*\|/.test(lines[i])){rows.push(lines[i]);i++;}var cs=rows.map(function(r){return r.trim().replace(/^\||\|$/g,"").split("|").map(function(c){return c.trim();});});var sep=cs[1]&&cs[1].every(function(c){return /^:?-+:?$/.test(c);});var b=cs.slice(sep?2:1);var tb="<table><thead><tr>"+cs[0].map(function(c){return "<th>"+inl(c)+"</th>";}).join("")+"</tr></thead><tbody>";b.forEach(function(r){tb+="<tr>"+r.map(function(c){return "<td>"+inl(c)+"</td>";}).join("")+"</tr>";});out.push(tb+"</tbody></table>");continue;}
     if(/^\s*[-*] /.test(ln)){var it=[];while(i<lines.length&&/^\s*[-*] /.test(lines[i])){it.push("<li>"+inl(lines[i].replace(/^\s*[-*] /,""))+"</li>");i++;}out.push("<ul>"+it.join("")+"</ul>");continue;}
