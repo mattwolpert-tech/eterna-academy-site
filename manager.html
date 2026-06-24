@@ -209,7 +209,12 @@ function renderCurriculum(){
   var h='<div class="row" style="justify-content:space-between"><h2>Curriculum builder</h2><button class="btn" onclick="saveStructure()">Save & publish</button></div><p class="muted">Build <b>tracks → modules → lessons</b>. Click a lesson to edit it. Use the ▾ arrow to collapse a module. Remember to <b>Save & publish</b> when done.</p>';
   DATA.tracks.forEach(function(t,ti){
     var lcount=t.modules.reduce(function(n,m){return n+m.lessons.length;},0);
-    h+='<div class="card"><h3 style="margin:0 0 8px">'+esc(t.title)+' <span class="muted" style="font-size:12px;font-weight:400">'+t.modules.length+' modules · '+lcount+' lessons</span></h3>';
+    h+='<div class="card"><div class="row" style="justify-content:space-between;gap:8px;align-items:center">'
+      +'<button class="btn ghost s" title="Track icon" onclick="pickTrackIcon('+ti+')"><i class="ti '+esc(t.icon||"ti-stack")+'"></i></button>'
+      +'<input value="'+esc(t.title)+'" onchange="setTrack('+ti+',\'title\',this.value)" placeholder="Track name" style="flex:1;font-weight:700;font-size:15px">'
+      +'<span class="muted" style="font-size:11px;white-space:nowrap">'+t.modules.length+' mod · '+lcount+' les</span>'
+      +'<button class="btn danger s" onclick="delTrack('+ti+')">Delete track</button></div>'
+      +'<input value="'+esc(t.blurb||"")+'" onchange="setTrack('+ti+',\'blurb\',this.value)" placeholder="Short description shown to agents on the track picker" style="width:100%;margin-top:6px;font-size:12px;color:var(--txt2)">';
     t.modules.forEach(function(m,mi){
       var ck=t.id+"_"+m.id, coll=window._collapsed[ck];
       h+='<div class="mod'+(coll?" collapsed":"")+'"><div class="modh"><button class="btn ghost s" style="border:none;padding:1px 6px;font-size:14px" title="Collapse" onclick="toggleMod(\''+ck+'\')">'+(coll?"▸":"▾")+'</button><i class="ti '+esc(m.icon||"ti-folder")+'"></i><input value="'+esc(m.title)+'" onchange="setMod('+ti+','+mi+',\'title\',this.value)" style="flex:1;font-weight:600"><span class="muted" style="font-size:11px">'+m.lessons.length+'</span><button class="btn ghost s" title="Module icon" onclick="pickIcon('+ti+','+mi+')">icon</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',-1)">↑</button><button class="btn ghost s" onclick="moveMod('+ti+','+mi+',1)">↓</button><button class="btn danger s" onclick="delMod('+ti+','+mi+')">Delete</button></div>';
@@ -221,9 +226,14 @@ function renderCurriculum(){
     });
     h+='<button class="btn ghost s" onclick="addMod('+ti+')">+ Add module</button></div>';
   });
+  h+='<button class="btn" style="margin-top:6px" onclick="addTrack()">+ Add a new track</button>';
   h+='<div id="lessonEdit"></div>';
   el.innerHTML=h;
 }
+function setTrack(ti,k,v){DATA.tracks[ti][k]=v;}
+function pickTrackIcon(ti){var cur=DATA.tracks[ti].icon||"ti-stack";var v=prompt("Track icon — any Tabler icon name (browse at tabler-icons.io).\nExamples: ti-rocket, ti-stack, ti-school, ti-users-group, ti-phone, ti-trophy, ti-sparkles",cur);if(v){DATA.tracks[ti].icon=v.trim();renderCurriculum();}}
+function addTrack(){var id="t"+Date.now().toString(36);DATA.tracks.push({id:id,title:"New Track",icon:"ti-stack",blurb:"",modules:[]});renderCurriculum();window.scrollTo(0,document.body.scrollHeight);toast("Track added — rename it, add modules, then Save & publish.");}
+function delTrack(ti){var t=DATA.tracks[ti];var msg=t.modules.length?('Delete the entire "'+t.title+'" track and all '+t.modules.length+' modules/lessons? This cannot be undone.'):('Delete the "'+t.title+'" track?');if(!confirm(msg))return;DATA.tracks.splice(ti,1);renderCurriculum();toast("Track deleted — click Save & publish to make it final.");}
 function toggleMod(k){window._collapsed[k]=!window._collapsed[k];renderCurriculum();}
 function pickIcon(ti,mi){var cur=DATA.tracks[ti].modules[mi].icon||"ti-folder";var v=prompt("Module icon — any Tabler icon name (browse them at tabler-icons.io).\nExamples: ti-flag, ti-trophy, ti-sparkles, ti-building-bank, ti-script, ti-phone, ti-headset, ti-coin, ti-brain",cur);if(v){DATA.tracks[ti].modules[mi].icon=v.trim();renderCurriculum();}}
 function setMod(ti,mi,k,v){DATA.tracks[ti].modules[mi][k]=v;}

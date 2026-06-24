@@ -333,7 +333,7 @@
   }
 
   function rolePicker() {
-    view.innerHTML = '<div style="max-width:760px"><h1>Choose your track</h1><p class="sub">Three paths, each built from the real Eterna library. Pick where you are — you can switch anytime.</p><div class="grid" style="grid-template-columns:1fr;gap:14px">' +
+    view.innerHTML = '<div style="max-width:760px"><h1>Choose your track</h1><p class="sub">Each path is built from the real Eterna library. Pick where you are — you can switch anytime.</p><div class="grid" style="grid-template-columns:1fr;gap:14px">' +
       TRACKS.map(function (t) {
         var n = t.modules.reduce(function (a, m) { return a + m.lessons.length; }, 0);
         return '<div class="card" style="cursor:pointer;display:flex;gap:16px;align-items:flex-start" onclick="eaPick(\'' + t.id + '\')"><div class="ic" style="width:46px;height:46px;font-size:24px;background:var(--accent-soft);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + '</div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div><div style="font-size:12px;color:var(--txt2)">' + t.modules.length + ' modules · ' + n + ' lessons</div></div><i class="ti ti-arrow-right" style="color:var(--lime);font-size:22px"></i></div>';
