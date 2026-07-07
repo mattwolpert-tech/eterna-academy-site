@@ -119,18 +119,27 @@ function tab(t){document.querySelectorAll(".tab").forEach(function(b){b.classLis
 // ---------- AGENTS ----------
 async function renderAgents(){
   var el=document.getElementById("s-agents");
-  el.innerHTML='<div class="row" style="justify-content:space-between;align-items:flex-end"><div><h2 style="margin:0">Agent progress</h2><p class="muted" style="margin:0">Live completion across the floor.</p></div><button class="btn" onclick="exportAgentsCSV()">&#11015; Export CSV</button></div><div class="card" id="agtbl" style="margin-top:12px">Loading…</div>';
+  el.innerHTML='<div class="row" style="justify-content:space-between;align-items:flex-end"><div><h2 style="margin:0">Agent progress</h2><p class="muted" style="margin:0">Live completion across the floor.</p></div><button class="btn" onclick="exportAgentsCSV()">&#11015; Export CSV</button></div>'
+    +'<input id="agsearch" placeholder="Search agent name, email, or upline…" oninput="paintAgents(this.value)" style="width:100%;max-width:380px;margin:12px 0 0;padding:9px 12px;border:1px solid var(--line);border-radius:8px;font:inherit">'
+    +'<div class="card" id="agtbl" style="margin-top:10px">Loading…</div>';
   var r=await api("/admin"); var d=await r.json();
-  var a=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp}); window._agents=a;
-  if(!a.length){document.getElementById("agtbl").innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
+  window._agents=(d.agents||[]).slice().sort(function(x,y){return y.xp-x.xp});
   var tot={};(DATA.tracks||[]).forEach(function(t){var n=0;t.modules.forEach(function(m){n+=m.lessons.length;});tot[t.id]=n;}); window._trackTot=tot;
-  var rows=a.map(function(x,i){
-    var total=tot[x.track]||0,pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0;
+  paintAgents(document.getElementById("agsearch")?document.getElementById("agsearch").value:"");
+}
+function paintAgents(q){
+  var a=window._agents||[],tot=window._trackTot||{},box=document.getElementById("agtbl");
+  if(!box)return;
+  if(!a.length){box.innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
+  q=(q||"").trim().toLowerCase();
+  var list=q?a.filter(function(x){return ((x.name||"")+" "+(x.email||"")+" "+(x.upline||"")).toLowerCase().indexOf(q)>=0;}):a;
+  var rows=list.map(function(x,i){
+    var total=tot[x.track]||0,done=total?Math.min(x.lessons||0,total):(x.lessons||0),pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0;
     var bar='<div style="height:5px;background:#e7e2d6;border-radius:3px;width:84px;margin-top:3px"><div style="height:5px;background:#2d6a56;border-radius:3px;width:'+pct+'%"></div></div>';
-    var pcell='<td><b>'+pct+'%</b>'+bar+'<div class="muted" style="font-size:11px">'+(x.lessons||0)+(total?' / '+total:'')+' pages</div></td>';
+    var pcell='<td><b>'+pct+'%</b>'+bar+'<div class="muted" style="font-size:11px">'+done+(total?' / '+total:'')+' pages</div></td>';
     return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td>'+pcell+'<td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td><td><button class="btn ghost s" onclick="resetPw(\''+esc(x.email)+'\')">Reset pw</button></td></tr>';
   }).join("");
-  document.getElementById("agtbl").innerHTML='<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+  box.innerHTML=(q?'<p class="muted" style="margin:0 0 8px">'+list.length+' of '+a.length+' agents match "'+esc(q)+'"</p>':'')+(list.length?'<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No agents match that search.</p>');
 }
 
 function csvCell(v){v=(v==null?"":String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
