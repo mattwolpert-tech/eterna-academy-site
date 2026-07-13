@@ -2,8 +2,8 @@
   "use strict";
   var D = window.EA_DATA;
   var TRACKS = D.tracks, DOCS = D.docs || {}, VIDEOS = D.videos || [], QZ = D.quizzes || [], RP = D.roleplay || [];
-  var LEVELS = D.levels || ["Recruit", "Setter", "Advisor", "Senior Advisor", "Elite"];
-  var THRESH = [0, 400, 900, 1600, 2600, 4000];
+  var LEVELS = D.levels || ["Recruit", "Junior Advisor", "Advisor", "Senior Advisor", "Elite Advisor"];
+  var THRESH = [0, 900, 1600, 2600, 4000];
   var RP_XP = 50;
 
   var trackById = {}, lessonById = {}, lessonModule = {}, lessonTrack = {};
