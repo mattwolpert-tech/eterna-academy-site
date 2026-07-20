@@ -127,19 +127,40 @@ async function renderAgents(){
   var tot={};(DATA.tracks||[]).forEach(function(t){var n=0;t.modules.forEach(function(m){n+=m.lessons.length;});tot[t.id]=n;}); window._trackTot=tot;
   paintAgents(document.getElementById("agsearch")?document.getElementById("agsearch").value:"");
 }
+function agDays(x){ return x.updated? Math.floor((Date.now()-x.updated)/86400000) : null; }
+function agStatus(x,tot){
+  var total=tot[x.track]||0, pct=total?Math.round((x.lessons||0)/total*100):0, d=agDays(x);
+  if(pct>=100 || (x.certs||[]).length) return "done";
+  if((x.lessons||0)===0) return "notstarted";
+  if(d!=null && d>=7) return "stalled";
+  return "active";
+}
+window.agFilter=function(f){ window._agFilter=f; paintAgents((document.getElementById("agsearch")||{}).value||""); };
 function paintAgents(q){
   var a=window._agents||[],tot=window._trackTot||{},box=document.getElementById("agtbl");
   if(!box)return;
   if(!a.length){box.innerHTML='<p class="muted">No agents have signed in yet.</p>';return;}
   q=(q||"").trim().toLowerCase();
-  var list=q?a.filter(function(x){return ((x.name||"")+" "+(x.email||"")+" "+(x.upline||"")).toLowerCase().indexOf(q)>=0;}):a;
+  var f=window._agFilter||"all";
+  var cnt={all:a.length,stalled:0,notstarted:0,done:0};
+  a.forEach(function(x){var s=agStatus(x,tot); if(cnt[s]!=null)cnt[s]++;});
+  var list=a.filter(function(x){
+    if(q && ((x.name||"")+" "+(x.email||"")+" "+(x.upline||"")).toLowerCase().indexOf(q)<0) return false;
+    return f==="all" || agStatus(x,tot)===f;
+  });
+  function chip(id,label,n){ return '<button class="btn '+(f===id?"":"ghost")+' s" onclick="agFilter(\''+id+'\')" style="margin-right:6px;margin-bottom:6px">'+label+' <b>'+n+'</b></button>'; }
+  var chips='<div style="margin:0 0 10px">'+chip("all","All",cnt.all)+chip("stalled","Stalled 7d+",cnt.stalled)+chip("notstarted","Not started",cnt.notstarted)+chip("done","Certified",cnt.done)+'</div>';
   var rows=list.map(function(x,i){
     var total=tot[x.track]||0,done=total?Math.min(x.lessons||0,total):(x.lessons||0),pct=total?Math.min(100,Math.round((x.lessons||0)/total*100)):0;
+    var st=agStatus(x,tot),d=agDays(x);
+    var rowbg=st==="stalled"?' style="background:#fdf1ea"':(st==="notstarted"?' style="background:#f7f4ec"':"");
     var bar='<div style="height:5px;background:#e7e2d6;border-radius:3px;width:84px;margin-top:3px"><div style="height:5px;background:#2d6a56;border-radius:3px;width:'+pct+'%"></div></div>';
     var pcell='<td><b>'+pct+'%</b>'+bar+'<div class="muted" style="font-size:11px">'+done+(total?' / '+total:'')+' pages</div></td>';
-    return '<tr><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td>'+pcell+'<td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+(x.updated?new Date(x.updated).toLocaleDateString():"-")+'</td><td><button class="btn ghost s" onclick="resetPw(\''+esc(x.email)+'\')">Reset pw</button></td></tr>';
+    var last=x.updated?new Date(x.updated).toLocaleDateString():"-";
+    var idle=(d!=null && d>=7 && st!=="done")?'<div style="color:#c0552b;font-size:11px;font-weight:600">'+d+'d idle</div>':"";
+    return '<tr'+rowbg+'><td>'+(i+1)+'</td><td>'+esc(x.name)+'<div class="muted">'+esc(x.email)+(x.number?' · '+esc(x.number):'')+'</div></td><td>'+esc(x.program||"-")+'</td><td>'+esc(x.upline||"-")+'</td><td><span class="pill">'+esc(x.track||"-")+'</span></td>'+pcell+'<td>Lv '+(x.level+1)+'</td><td><b>'+(x.xp||0).toLocaleString()+'</b></td><td>'+(x.badges||0)+'</td><td>'+((x.certs||[]).length)+'</td><td class="muted">'+last+idle+'</td><td><button class="btn ghost s" onclick="resetPw(\''+esc(x.email)+'\')">Reset pw</button></td></tr>';
   }).join("");
-  box.innerHTML=(q?'<p class="muted" style="margin:0 0 8px">'+list.length+' of '+a.length+' agents match "'+esc(q)+'"</p>':'')+(list.length?'<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No agents match that search.</p>');
+  box.innerHTML=chips+(q?'<p class="muted" style="margin:0 0 8px">'+list.length+' match "'+esc(q)+'"</p>':'')+(list.length?'<table><thead><tr><th>#</th><th>Agent</th><th>Program</th><th>Upline</th><th>Track</th><th>% Complete</th><th>Level</th><th>XP</th><th>Badges</th><th>Certs</th><th>Last active</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>':'<p class="muted">No agents match.</p>');
 }
 
 function csvCell(v){v=(v==null?"":String(v));return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;}
