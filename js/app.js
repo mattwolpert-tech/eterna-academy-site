@@ -30,7 +30,7 @@
   (function () { try { var pr = JSON.parse(localStorage.getItem("ea_profile") || "null"); if (pr && pr.email) state.identity = { name: pr.name, email: pr.email, number: pr.number, program: pr.program, upline: pr.upline }; } catch (e) {} })();
   function load() {
     try { var s = JSON.parse(localStorage.getItem(KEY)); if (s) return s; } catch (e) {}
-    return { track: null, identity: null, orientation: {}, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, streak: 1, lastActive: today() };
+    return { track: null, identity: null, orientation: {}, completed: {}, quiz: {}, rp: {}, badges: {}, seenTracks: {}, unlocked: {}, streak: 1, lastActive: today() };
   }
   function save() { localStorage.setItem(KEY, JSON.stringify(state)); scheduleSync(); }
   var syncT, hydrated = false;
@@ -46,7 +46,7 @@
       badges: Object.keys(state.badges).length,
       certs: TRACKS.filter(trackComplete).map(function (t) { return t.id; }),
       orientation: state.orientation || {},
-      data: { completed: state.completed, quiz: state.quiz, rp: state.rp, badges: state.badges, orientation: state.orientation }
+      data: { completed: state.completed, quiz: state.quiz, rp: state.rp, badges: state.badges, orientation: state.orientation, unlocked: state.unlocked || {} }
     };
     fetch(window.EA_API + "/sync", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(function () {});
   }
@@ -56,7 +56,8 @@
       var r = await fetch(window.EA_API + "/me?email=" + encodeURIComponent(state.identity.email));
       var d = await r.json();
       if (d && d.data) {
-        ["completed", "quiz", "rp", "badges"].forEach(function (k) { if (d.data[k]) Object.keys(d.data[k]).forEach(function (id) { if (state[k][id] === undefined) state[k][id] = d.data[k][id]; }); });
+        state.unlocked = state.unlocked || {};
+        ["completed", "quiz", "rp", "badges", "unlocked"].forEach(function (k) { if (d.data[k]) Object.keys(d.data[k]).forEach(function (id) { if (state[k][id] === undefined) state[k][id] = d.data[k][id]; }); });
         if (d.data.orientation && Object.keys(d.data.orientation).length) state.orientation = Object.assign(state.orientation || {}, d.data.orientation);
         if (d.track && !state.track) state.track = d.track;
         localStorage.setItem(KEY, JSON.stringify(state));
@@ -359,6 +360,7 @@
   function render() {
     header(); setNav();
     if (!state.identity) return identityScreen();
+    var _ct = curTrack(); if (_ct && _ct.code && !(state.unlocked || {})[_ct.id]) { state.track = null; }
     if (!curTrack()) return rolePicker();
     var r = route.name;
     if (r === "curriculum") return curriculum();
@@ -375,10 +377,28 @@
     view.innerHTML = '<div style="max-width:760px"><h1>Choose your track</h1><p class="sub">Each path is built from the real Eterna library. Pick where you are — you can switch anytime.</p><div class="grid" style="grid-template-columns:1fr;gap:14px">' +
       TRACKS.map(function (t) {
         var n = t.modules.reduce(function (a, m) { return a + m.lessons.length; }, 0);
-        return '<div class="card" style="cursor:pointer;display:flex;gap:16px;align-items:flex-start" onclick="eaPick(\'' + t.id + '\')"><div class="ic" style="width:46px;height:46px;font-size:24px;background:var(--accent-soft);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + '</div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div><div style="font-size:12px;color:var(--txt2)">' + t.modules.length + ' modules · ' + n + ' lessons</div></div><i class="ti ti-arrow-right" style="color:var(--lime);font-size:22px"></i></div>';
+        var meta = '<div style="font-size:12px;color:var(--txt2)">' + t.modules.length + ' modules · ' + n + ' lessons</div>';
+        if (t.code && !(state.unlocked || {})[t.id]) {
+          return '<div class="card" style="display:flex;gap:16px;align-items:flex-start"><div class="ic" style="width:46px;height:46px;font-size:24px;background:var(--panel2);color:var(--txt2)"><i class="ti ti-lock"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + ' <span style="font-size:11px;color:var(--txt2);font-weight:500">· Leaders only</span></div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><input id="code_' + t.id + '" placeholder="Enter access code" onkeydown="if(event.key===\'Enter\')eaUnlock(\'' + t.id + '\')" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;font:inherit;max-width:190px"><button class="btn s" onclick="eaUnlock(\'' + t.id + '\')">Unlock</button></div><div id="cerr_' + t.id + '" style="color:#c0552b;font-size:12px;margin-top:5px;display:none">Incorrect code — check with your manager.</div></div></div>';
+        }
+        return '<div class="card" style="cursor:pointer;display:flex;gap:16px;align-items:flex-start" onclick="eaPick(\'' + t.id + '\')"><div class="ic" style="width:46px;height:46px;font-size:24px;background:var(--accent-soft);color:var(--lime)"><i class="ti ' + t.icon + '"></i></div><div style="flex:1"><div style="font-weight:600;font-size:17px">' + escp(t.title) + '</div><div class="sub" style="margin:4px 0 8px">' + escp(t.blurb) + '</div>' + meta + '</div><i class="ti ti-arrow-right" style="color:var(--lime);font-size:22px"></i></div>';
       }).join("") + '</div></div>';
   }
-  window.eaPick = function (id) { state.track = id; state.seenTracks[id] = true; save(); go("dashboard"); };
+  window.eaPick = function (id) {
+    var t = trackById[id];
+    if (t && t.code && !(state.unlocked || {})[id]) { rolePicker(); return; }
+    state.track = id; state.seenTracks[id] = true; save(); go("dashboard");
+  };
+  window.eaUnlock = function (id) {
+    var t = trackById[id]; if (!t) return;
+    var v = ((document.getElementById("code_" + id) || {}).value || "").trim().toLowerCase();
+    if (v && v === String(t.code || "").toLowerCase()) {
+      state.unlocked = state.unlocked || {}; state.unlocked[id] = true; save();
+      eaPick(id);
+    } else {
+      var e = document.getElementById("cerr_" + id); if (e) e.style.display = "block";
+    }
+  };
 
   function dashboard() {
     var t = curTrack(), li = levelInfo();
