@@ -465,10 +465,17 @@ async function doCopy(ti,mi,li,move){
   await saveStructure(true);
   closeEdit();renderCurriculum();toast(move?"Lesson moved & published":"Lesson copied & published");
 }
-async function saveStructure(quiet){
-  var r=await api("/save",{method:"POST",body:JSON.stringify({what:"structure",value:{levels:DATA.levels,tracks:DATA.tracks}})});
-  if(r.ok){ if(!quiet)toast("Curriculum published"); } else toast("Save failed");
+async function publish(what,value,quiet){
+  var body={what:what,value:value,rev:(DATA.revs||{})[what]};
+  var r=await api("/save",{method:"POST",body:JSON.stringify(body)});
+  if(r.status===409){
+    alert("Can't save — someone else edited the "+what+" since you opened this page.\n\nReload the page to load their latest version, then re-apply your change.\n(Reloading discards your current unsaved edits.)");
+    return false;
+  }
+  if(r.ok){ var d=await r.json().catch(function(){return{};}); if(d&&d.rev){ DATA.revs=DATA.revs||{}; DATA.revs[what]=d.rev; } if(!quiet)toast(({structure:"Curriculum",videos:"Videos",quizzes:"Quizzes",roleplay:"Roleplay"}[what]||"Content")+" published"); return true; }
+  toast("Save failed"); return false;
 }
+async function saveStructure(quiet){ return await publish("structure",{levels:DATA.levels,tracks:DATA.tracks},quiet); }
 
 // ---------- VIDEOS ----------
 function renderVideos(){
@@ -483,7 +490,7 @@ function vrows(){
   }).join("");
 }
 function addVid(){DATA.videos.push({t:"New video",id:"",track:"new"});vrows();}
-async function saveVideos(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"videos",value:DATA.videos})});toast(r.ok?"Videos published":"Save failed");}
+async function saveVideos(){ await publish("videos",DATA.videos); }
 
 // ---------- QUIZZES (visual builder) ----------
 function renderQuizzes(){
@@ -514,7 +521,7 @@ function moveQ(i,d){var ni=i+d;if(ni<0||ni>=DATA.quizzes.length)return;var x=DAT
 function setAnswer(i,oi){DATA.quizzes[i].answer=oi;renderQuizzes();}
 function addOption(i){DATA.quizzes[i].options.push("");renderQuizzes();}
 function delOption(i,oi){var q=DATA.quizzes[i];if((q.options||[]).length<=2){toast("Keep at least 2 answers");return;}q.options.splice(oi,1);if(q.answer>=q.options.length)q.answer=q.options.length-1;else if(q.answer>oi)q.answer--;renderQuizzes();}
-async function saveQuizzes(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"quizzes",value:{questions:DATA.quizzes}})});toast(r.ok?"Quizzes published":"Save failed");}
+async function saveQuizzes(){ await publish("quizzes",{questions:DATA.quizzes}); }
 
 // ---------- ROLEPLAY (visual builder) ----------
 function renderRoleplay(){
@@ -545,7 +552,7 @@ function moveS(i,d){var ni=i+d;if(ni<0||ni>=DATA.roleplay.length)return;var x=DA
 function setBest(i,oi){DATA.roleplay[i].options.forEach(function(o,k){o.score=(k===oi?100:0);});renderRoleplay();}
 function addRpOption(i){DATA.roleplay[i].options.push({text:"",score:0,feedback:""});renderRoleplay();}
 function delRpOption(i,oi){var s=DATA.roleplay[i];if((s.options||[]).length<=2){toast("Keep at least 2 responses");return;}s.options.splice(oi,1);if(!s.options.some(function(o){return +o.score>=100;}))s.options[0].score=100;renderRoleplay();}
-async function saveRoleplay(){var r=await api("/save",{method:"POST",body:JSON.stringify({what:"roleplay",value:{scenarios:DATA.roleplay}})});toast(r.ok?"Roleplay published":"Save failed");}
+async function saveRoleplay(){ await publish("roleplay",{scenarios:DATA.roleplay}); }
 </script>
 </body>
 </html>
