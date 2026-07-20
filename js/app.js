@@ -158,6 +158,18 @@
       if (/^### /.test(ln)) { out.push("<h3>" + inline(ln.slice(4)) + "</h3>"); i++; continue; }
       if (/^## /.test(ln)) { out.push("<h2>" + inline(ln.slice(3)) + "</h2>"); i++; continue; }
       if (/^# /.test(ln)) { out.push("<h2>" + inline(ln.slice(2)) + "</h2>"); i++; continue; }
+      if (/^\s*---+\s*$/.test(ln)) { out.push("<hr>"); i++; continue; }
+      if (/^\s*>/.test(ln)) {
+        var cbuf = [], ctype = "note";
+        while (i < lines.length && /^\s*>/.test(lines[i])) {
+          var ct = lines[i].replace(/^\s*>\s?/, "");
+          var cm = ct.match(/^\[!(\w+)\]\s*/);
+          if (cm) { ctype = cm[1].toLowerCase(); ct = ct.slice(cm[0].length); }
+          cbuf.push(ct); i++;
+        }
+        var cinner = cbuf.map(function (x) { return x.trim() === "" ? "" : (/^\s*[-*] /.test(x) ? '<div class="cli">' + inline(x.replace(/^\s*[-*] /, "")) + '</div>' : '<div>' + inline(x) + '</div>'); }).join("");
+        out.push('<div class="callout callout-' + ctype + '">' + cinner + '</div>'); continue;
+      }
       if (/^\s*@pdf\((.+)\)\s*$/.test(ln)) { var pm = ln.match(/@pdf\((.+)\)/); out.push('<iframe src="' + escp(pm[1]) + '" style="display:block;width:100%;height:78vh;margin:10px 0;border:1px solid var(--line,#e4ddcf);border-radius:12px" title="PDF document"></iframe>'); i++; continue; }
       if (/^\s*!\[[^\]]*\]\([^)]+\)\s*$/.test(ln)) { var im = ln.match(/!\[([^\]]*)\]\(([^)]+)\)/); out.push('<img src="' + im[2] + '" alt="' + escp(im[1]) + '" style="display:block;max-width:100%;margin:10px 0;border-radius:12px;border:1px solid var(--line,#e4ddcf)">'); i++; continue; }
       if (/^\s*\|.*\|/.test(ln)) {
