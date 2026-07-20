@@ -189,7 +189,7 @@
     return out.join("");
   }
   function renderDocText(text) {
-    return text.replace(/\r/g, "").split(/\n{2,}/).map(function (b) { b = b.trim(); return b ? "<p>" + escp(b).replace(/\n/g, "<br>") + "</p>" : ""; }).join("");
+    return md(text || "");
   }
 
   var view = document.getElementById("view");
