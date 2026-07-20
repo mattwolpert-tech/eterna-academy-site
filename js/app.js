@@ -299,7 +299,46 @@
       return '<div class="card" data-eq="' + q.id + '" style="margin-bottom:10px"><div style="font-weight:500;margin-bottom:8px">' + (i + 1) + '. ' + escp(q.q) + '</div>' + q.options.map(function (o, j) { return '<button class="opt" onclick="eaExamPick(\'' + q.id + '\',' + j + ',this)">' + escp(o) + '</button>'; }).join("") + '</div>';
     }).join("");
     window._exam = { ans: {} };
+    if (state.orientation.exam && state.orientation.exam.passed) {
+      document.getElementById("examres").innerHTML = '<div class="fb good" style="display:block;margin-top:12px"><b>You\'re already certified.</b><br><button class="btn" style="margin-top:8px" onclick="eaCert()">&#127891; View your certificate</button></div>';
+    }
   }
+  function certMarkup(nm, sc, dstr) {
+    return '<div style="background:#faf7f0;border:3px solid #1a3c34;font-family:Georgia,\'Times New Roman\',serif">'
+      + '<div style="border:2px solid #f5c842;margin:14px;padding:40px 44px;text-align:center;color:#1a3c34">'
+      + '<div style="letter-spacing:.35em;font-size:13px;font-weight:700">ETERNA ACADEMY</div>'
+      + '<div style="width:56px;height:3px;background:#f5c842;margin:16px auto"></div>'
+      + '<div style="font-size:30px;font-weight:700;margin:4px 0">Certificate of Completion</div>'
+      + '<div style="font-size:14px;color:#5b6b63;margin-bottom:22px">This certifies that</div>'
+      + '<div style="font-size:34px;font-weight:700;border-bottom:2px solid #f5c842;display:inline-block;padding:0 24px 8px;margin-bottom:20px">' + escp(nm) + '</div>'
+      + '<div style="font-size:16px;line-height:1.6;color:#33443d;max-width:560px;margin:0 auto">has successfully completed the <b>Inbound Orientation Certification</b> and is cleared to take live inbound calls for Eterna.</div>'
+      + '<div style="display:flex;justify-content:center;gap:44px;margin:26px 0 4px;font-size:12px;color:#5b6b63;text-transform:uppercase;letter-spacing:.08em">'
+      + '<div><div style="font-family:Arial,sans-serif;font-weight:700;color:#1a3c34;font-size:18px">' + escp(String(sc)) + '%</div>Exam score</div>'
+      + '<div><div style="font-family:Arial,sans-serif;font-weight:700;color:#1a3c34;font-size:18px">' + escp(dstr) + '</div>Date completed</div>'
+      + '</div>'
+      + '<div style="margin-top:18px;display:inline-block;width:76px;height:76px;border-radius:50%;background:#1a3c34;color:#f5c842;font-size:11px;font-weight:700;line-height:76px;letter-spacing:.04em;font-family:Arial,sans-serif">CERTIFIED</div>'
+      + '</div></div>';
+  }
+  function certData() {
+    var nm = (state.identity && state.identity.name) || (state.identity && state.identity.email) || "Eterna Agent";
+    var sc = (state.orientation.exam && state.orientation.exam.score != null) ? state.orientation.exam.score : "";
+    var dstr = new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    return { nm: nm, sc: sc, dstr: dstr };
+  }
+  window.eaCert = function () {
+    var c = certData(), ex = document.getElementById("certov"); if (ex) ex.remove();
+    var ov = document.createElement("div"); ov.id = "certov";
+    ov.style.cssText = "position:fixed;inset:0;z-index:9999;background:rgba(20,30,28,.78);display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px;overflow:auto";
+    ov.innerHTML = '<div style="display:flex;gap:10px"><button class="btn" onclick="eaCertPrint()">Print / Save as PDF</button><button class="btn" style="background:#fff;color:#1a3c34" onclick="document.getElementById(\'certov\').remove()">Close</button></div>'
+      + '<div style="width:min(820px,96vw)">' + certMarkup(c.nm, c.sc, c.dstr) + '</div>';
+    document.body.appendChild(ov);
+  };
+  window.eaCertPrint = function () {
+    var c = certData(), w = window.open("", "_blank");
+    if (!w) { alert("Please allow pop-ups to print your certificate."); return; }
+    w.document.write('<!doctype html><html><head><title>Eterna Academy Certificate</title><meta charset="utf-8"><style>body{margin:0;padding:26px;background:#fff}@page{size:landscape;margin:12mm}</style></head><body onload="setTimeout(function(){window.print()},250)"><div style="max-width:900px;margin:0 auto">' + certMarkup(c.nm, c.sc, c.dstr) + '</div></body></html>');
+    w.document.close();
+  };
   window.eaExamPick = function (qid, j, btn) { window._exam.ans[qid] = j; var card = btn.closest("[data-eq]"); card.querySelectorAll(".opt").forEach(function (b) { b.style.borderColor = ""; }); btn.style.borderColor = "var(--green2)"; };
   window.eaExamSubmit = function (lid) {
     var l = lessonById[lid], qs = (l.quizzes || []).map(function (q) { return qById[q]; }).filter(Boolean), pass = l.pass || 80;
@@ -309,7 +348,7 @@
     var res = document.getElementById("examres");
     if (passed) {
       if (!state.completed[l.id]) completeLesson(l); save(); checkBadges(); header();
-      res.innerHTML = '<div class="fb good" style="display:block;margin-top:12px"><b>Passed — ' + score + '%!</b><br>You\'re certified. <b>Orientation with Jessica is unlocked</b> and you\'re cleared to start taking live inbound calls. Your manager has been notified.</div>';
+      res.innerHTML = '<div class="fb good" style="display:block;margin-top:12px"><b>Passed — ' + score + '%!</b><br>You\'re certified. <b>Orientation with Jessica is unlocked</b> and you\'re cleared to start taking live inbound calls. Your manager has been notified.<br><button class="btn" style="margin-top:12px" onclick="eaCert()">&#127891; View your certificate</button></div>';
       document.getElementById("examsubmit").disabled = true;
     } else {
       save();
